@@ -1,0 +1,14 @@
+{
+  "watch": [
+    "app",
+    "bootstrap",
+    "config",
+    "core",
+    "database",
+    "routes",
+    "plugins",
+    "index.js"
+  ],
+  "ext": "js,json",
+  "exec": "node index.js"
+}

@@ -17,13 +17,15 @@ const SEARCH_INDEX = [
 ]
 
 function applyHighlighting() {
-  document.querySelectorAll('pre code').forEach((block) => {
-    block.textContent = block.textContent
-  })
+  if (window.Prism?.highlightAll) {
+    window.Prism.highlightAll()
+  }
 }
 
 function setupCopyButtons() {
   document.querySelectorAll('.copy-button').forEach((button) => {
+    if (button.dataset.bound === 'true') return
+    button.dataset.bound = 'true'
     button.addEventListener('click', async () => {
       const code = button.closest('.code-block')?.querySelector('code')?.textContent || ''
       await navigator.clipboard.writeText(code)
@@ -119,11 +121,15 @@ function updateGeneratedStrings() {
   document.querySelectorAll('[data-copy-label]').forEach((button) => {
     button.textContent = t('ui.copy_code')
   })
+
+  const metaLanguage = document.querySelector('[data-language-value]')
+  if (metaLanguage) metaLanguage.textContent = getCurrentLanguage().toUpperCase()
 }
 
 document.addEventListener('i18n:updated', () => {
   updateGeneratedStrings()
   setupActiveNav()
+  applyHighlighting()
 })
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -133,11 +139,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupSidebar()
   setupActiveNav()
   setupSearch()
-  applyHighlighting()
   setupCopyButtons()
   updateGeneratedStrings()
   renderSearchResults('')
-
-  const metaLanguage = document.querySelector('[data-language-value]')
-  if (metaLanguage) metaLanguage.textContent = getCurrentLanguage().toUpperCase()
+  applyHighlighting()
 })

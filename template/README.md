@@ -1,157 +1,77 @@
-# <div align="center"><img src="./docs/images/favicon.png" alt="Backurus logo" width="120" /></div>
+# Backurus
 
-# <div align="center">Backurus</div>
+A Modern Backend Framework for Node.js inspired by Laravel.
 
-<p align="center">
-  Laravel-inspired backend framework for Node.js with a fast API-first workflow.
-</p>
+## Introduction
 
-<p align="center">
-  <img alt="ESM" src="https://img.shields.io/badge/module-ESM-1f2937?style=for-the-badge">
-  <img alt="API First" src="https://img.shields.io/badge/focus-API%20First-f97316?style=for-the-badge">
-</p>
+Backurus is a backend framework built to make API development simple, fast, and structured. It combines a Laravel-like developer experience with a lightweight JavaScript runtime, modern ES Modules, and an API-first architecture that stays productive as projects grow.
 
-Backurus adalah framework backend berbasis Node.js yang dirancang untuk developer yang suka ergonomi Laravel, tapi ingin runtime JavaScript modern, struktur sederhana, dan pengalaman membangun REST API yang cepat. Fokus Backurus bukan jadi framework serba bisa yang berat, tapi jadi framework yang enak dipakai untuk membangun API production-style dengan pola yang familiar.
+Backurus includes:
 
-## Kenapa Backurus?
-
-Backurus menggabungkan beberapa hal yang biasanya terpencar:
-
-- routing gaya Laravel dengan action string seperti `ProductController@index`
-- ORM bergaya Eloquent untuk CRUD, pagination, relationship, dan soft delete
-- migration + seeder untuk workflow database yang rapi
-- validasi request, JWT auth, queue, scheduler, plugin, facade, dan WebSocket
-- CLI generator yang langsung usable untuk bikin module API baru
-- dokumentasi lokal multilingual di folder `docs/`
-
-Kalau tujuan Anda adalah bikin backend API dengan cepat tanpa tenggelam di boilerplate Express mentah atau kompleksitas framework besar, Backurus berada di posisi yang kuat.
-
-## Keunggulan Dibanding Framework Lain
-
-### 1. Lebih opinionated daripada Express
-
-Express memberi kebebasan, tapi kebebasan itu sering berubah jadi keputusan teknis kecil yang berulang: struktur folder, validasi, auth, migration, response helper, dan pola controller. Backurus sudah menetapkan fondasi itu dari awal, jadi developer bisa langsung fokus ke business logic.
-
-### 2. Lebih ringan secara mental daripada NestJS
-
-NestJS sangat kuat, tapi sering terasa berat untuk project API yang hanya butuh alur cepat dan sederhana. Backurus memilih API yang lebih langsung: file-based structure yang mudah dibaca, controller sederhana, dan command CLI yang pragmatis.
-
-### 3. Lebih familiar untuk developer Laravel/PHP
-
-Banyak naming dan alur di Backurus sengaja dibuat familiar:
-
-- `node urus make:controller`
-- `node urus migrate`
-- `node urus db:seed`
-- middleware alias
-- request validation class
-- facade kecil untuk service penting
-- `storage:link` style workflow
-
-Artinya, onboarding dari Laravel ke Node.js terasa jauh lebih halus.
-
-### 4. API-first dari awal
-
-Backurus jelas diarahkan untuk backend API:
-
-- response JSON helper
-- JWT auth
-- queue dan scheduler
-- upload file multipart
-- public storage URL
-- route listing
-- WebSocket bawaan
-
-Ini bukan framework fullstack yang kebetulan bisa bikin API. Ini framework backend yang memang dibangun untuk itu.
-
-## Fitur Inti
-
-- `node urus` CLI untuk generator dan operational workflow
-- ES Modules native
-- HTTP server internal dengan router sendiri
-- controller string action ala Laravel
-- request parser JSON, urlencoded, dan multipart form-data
-- file upload dan public disk storage
-- ORM dengan CRUD, query builder, pagination, timestamps, soft deletes, relationship
-- schema builder + migration untuk SQLite dan MySQL
-- request validation class
+- Laravel-like CLI with `node urus`
+- expressive routing with controller actions
+- built-in ORM with query builder and relationships
+- schema migrations and seeders
+- request validation classes
 - JWT authentication
-- middleware alias system
-- event bus, queue worker, dan scheduler
-- plugin system
-- facade layer untuk service framework
-- WebSocket hub bawaan
-- docs website lokal di `docs/`
+- middleware aliases
+- hot reload development server
 
-## Siapa yang Cocok Pakai Backurus?
+## Installation
 
-Backurus cocok untuk:
+To start a new Backurus project, the intended workflow is:
 
-- developer Laravel yang ingin pindah ke Node.js tanpa kehilangan ergonomi
-- tim kecil yang ingin delivery API cepat
-- project admin panel backend, mobile API, internal tools, dan SaaS backend
-- eksperimen framework custom yang tetap punya struktur serius
+```bash
+npx create-backurus-app my-api
+cd my-api
+node urus serve
+```
 
-Backurus kurang cocok jika Anda butuh:
-
-- ekosistem plugin sebesar Express/NestJS
-- convention enterprise yang sangat kompleks
-- integrasi frontend SSR atau fullstack rendering sebagai fokus utama
-
-## Quick Start
-
-### 1. Install dependency
+For this repository scaffold, install dependencies and boot the framework locally:
 
 ```bash
 npm install
-```
-
-### 2. Siapkan environment
-
-Sesuaikan `.env` Anda. Secara default project ini bisa jalan dengan SQLite di `storage/database.sqlite`.
-
-### 3. Jalankan migration dan seeder
-
-```bash
 node urus migrate
 node urus db:seed
-```
-
-### 4. Aktifkan public storage link
-
-```bash
-node urus storage:link
-```
-
-### 5. Jalankan server
-
-```bash
 node urus serve
 ```
 
-Server akan berjalan sesuai `APP_PORT` pada config aplikasi.
+Backurus reads environment variables from `.env`. Typical keys are:
 
-## Pengalaman Developer
+```env
+APP_NAME=Backurus
+APP_PORT=3000
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=testfw
+DB_USERNAME=root
+DB_PASSWORD=secret
+JWT_SECRET=supersecretkey
+QUEUE_CONNECTION=sync
+```
 
-Workflow Backurus sengaja dibuat pendek:
+## CLI Commands
+
+All framework commands run through `node urus`.
+
+### Core commands
 
 ```bash
-node urus make:model Product
-node urus make:controller ProductController
-node urus make:migration create_products_table
+node urus serve
 node urus migrate
-node urus serve
+node urus route:list
 ```
 
-Dengan alur ini, Anda tidak perlu merakit stack backend dari nol setiap kali memulai module baru.
-
-## CLI Utama
+- `node urus serve`: start the development server with file watching and auto-restart.
+- `node urus migrate`: run pending database migrations.
+- `node urus route:list`: print the registered routes, methods, URIs, actions, and names.
 
 ### Generators
 
 ```bash
-node urus make:controller UserController
 node urus make:model User
+node urus make:controller UserController
 node urus make:migration create_users_table
 node urus make:middleware AuthMiddleware
 node urus make:request StoreUserRequest
@@ -163,202 +83,184 @@ node urus make:resource UserResource
 node urus make:module Admin
 ```
 
-### Database dan runtime
+- `make:model`: generate a model class in `app/models`.
+- `make:controller`: generate a controller in `app/controllers`.
+- `make:migration`: generate a migration file in `database/migrations`.
+- `make:middleware`: generate a middleware function in `app/middleware`.
+- `make:request`: generate a request validation class in `app/requests`.
+- `make:job`: generate a queue job class.
+- `make:event`: generate an event payload class.
+- `make:seeder`: generate a database seeder.
+- `make:policy`: generate an authorization policy.
+- `make:resource`: generate an API resource transformer.
+- `make:module`: generate a module directory with common subfolders.
+
+### Database and runtime commands
 
 ```bash
-node urus migrate
 node urus migrate:rollback
 node urus migrate:reset
 node urus migrate:fresh
 node urus migrate:status
 node urus db:seed
-node urus route:list
 node urus queue:work
 node urus queue:restart
 node urus schedule:run
-node urus serve
-node urus storage:link
 node urus config:cache
 node urus config:clear
-```
-
-## Contoh Routing
-
-```js
-router.get('/products', 'ProductController@index')
-router.post('/products', 'ProductController@store')
-router.put('/products/:id', 'ProductController@update').middleware('auth')
-```
-
-Routing model ini sengaja dibuat ringkas dan mudah dibaca.
-
-## Contoh Controller
-
-```js
-import Product from '../models/Product'
-import StoreProductRequest from '../requests/StoreProductRequest'
-import { validate } from '../../core/validator'
-
-export default class ProductController {
-  async index(req, res) {
-    const page = Number(req.query.page || 1)
-    const perPage = Number(req.query.per_page || 10)
-    const result = await Product.orderBy('id', 'desc').paginate(page, perPage)
-    return res.paginated(result.data, result.meta)
-  }
-
-  async store(req, res) {
-    await validate(req, StoreProductRequest)
-    const product = await Product.create({
-      name: req.body.name,
-      description: req.body.description || null,
-      price: Number(req.body.price),
-      stock: Number(req.body.stock)
-    })
-    return res.created(product, 'Product created')
-  }
-}
-```
-
-## Upload File dan Storage Publik
-
-Backurus sekarang sudah support upload multipart dan public storage ala workflow Laravel.
-
-### Buat symbolic link public storage
-
-```bash
 node urus storage:link
 ```
 
-Ini akan membuat:
+- `migrate:rollback`: roll back the latest migration batch.
+- `migrate:reset`: roll back all applied migrations.
+- `migrate:fresh`: drop all known tables and re-run migrations.
+- `migrate:status`: show which migrations have run.
+- `db:seed`: execute all seeders, or one named seeder.
+- `queue:work`: start the queue worker.
+- `queue:restart`: signal long-running workers to restart.
+- `schedule:run`: execute due scheduled commands.
+- `config:cache`: cache resolved config to disk.
+- `config:clear`: clear cached config.
+- `storage:link`: create `public/storage` symlink to `storage/app/public`.
 
-```text
-public/storage -> storage/app/public
-```
-
-### Simpan file upload di controller
-
-```js
-import { Storage } from '../../core/facades'
-
-export default class ProductController {
-  async store(req, res) {
-    const image = req.file('image')
-    const storedPath = image
-      ? await Storage.disk('public').putFile('products', image)
-      : null
-
-    const imageUrl = storedPath
-      ? Storage.disk('public').url(storedPath)
-      : null
-
-    return res.created({
-      image: storedPath,
-      image_url: imageUrl
-    })
-  }
-}
-```
-
-Field upload tersedia lewat:
-
-- `req.files`
-- `req.file('fieldName')`
-
-## Arsitektur Project
+## Project Structure
 
 ```text
 app/
   controllers/
-  models/
-  middleware/
-  requests/
-  jobs/
   events/
-  policies/
-  modules/
+  jobs/
+  middleware/
+  models/
+  requests/
+  resources/
+  services/
 bootstrap/
 config/
 core/
 database/
   migrations/
   seeders/
-routes/
-plugins/
 docs/
+plugins/
+routes/
+urus
+.env
 ```
 
-## Konfigurasi yang Tersedia
+- `app/`: application code such as controllers, models, middleware, jobs, and requests.
+- `bootstrap/`: application bootstrapping and container setup.
+- `config/`: framework and app configuration files.
+- `core/`: framework internals such as router, ORM, server, scheduler, queue, and facades.
+- `database/`: migrations and seeders.
+- `docs/`: static documentation website with EN and ID translations.
+- `plugins/`: plugin entry points that auto-load on boot.
+- `routes/`: route definitions and scheduled console commands.
+- `urus`: CLI launcher for all Backurus commands.
 
-Backurus saat ini memuat konfigurasi utama dari:
+## Example API
 
-- `config/app.js`
-- `config/database.js`
-- `config/auth.js`
-- `config/queue.js`
-- `config/storage.js`
+Example route:
 
-Dengan pendekatan ini, konfigurasi tetap eksplisit dan mudah ditelusuri.
+```javascript
+Route.get('/users', 'UserController@index')
+```
 
-## Database Support
+Example controller:
 
-Driver yang sudah terlihat dipersiapkan di project:
+```javascript
+import User from '../models/User'
 
-- SQLite
-- MySQL
+export default class UserController {
+  async index(req, res) {
+    const users = await User.all()
+    return res.success(users)
+  }
+}
+```
 
-SQLite cocok untuk development cepat, sedangkan MySQL bisa dipakai untuk deployment yang lebih tradisional.
+## Migration Example
 
-## Dokumentasi Lokal
+Backurus migrations use a schema builder with Laravel-like table methods:
 
-Backurus menyertakan website dokumentasi di folder `docs/`, termasuk:
+```javascript
+await schema.create('users', (table) => {
+  table.id()
+  table.string('name')
+  table.string('email').unique()
+  table.enum('role', ['admin', 'user']).default('user')
+  table.timestamps()
+})
+```
+
+Supported column types include `string`, `text`, `integer`, `bigInteger`, `boolean`, `date`, `datetime`, `timestamp`, `enum`, `json`, `float`, `double`, and `decimal`.
+
+Supported modifiers include `nullable()`, `default()`, `unique()`, `index()`, and `unsigned()`.
+
+## ORM Example
+
+Backurus models expose a compact Eloquent-style API:
+
+```javascript
+const users = await User.all()
+
+const user = await User.find(1)
+
+await User.create({
+  name: 'Rakha'
+})
+```
+
+Common query builder patterns:
+
+```javascript
+await User.where('age', '>', 18).get()
+await User.where('email', 'rakha@email.com').first()
+await User.orderBy('created_at', 'desc').limit(10).get()
+await User.paginate(1, 10)
+await User.with('posts').find(1)
+```
+
+## Documentation Website
+
+The `docs/` folder contains a static documentation site with:
 
 - introduction
 - installation
-- quickstart
+- CLI commands
 - routing
 - controllers
 - models
 - migrations
 - validation
 - authentication
-- queue
-- websocket
-- plugins
-- CLI
+- queue and scheduler
+- WebSocket
+- plugins and facades
 
-Logo Backurus juga sudah dipakai konsisten di dokumentasi lokal tersebut.
+The documentation website includes:
 
-## Posisi Backurus
+- sidebar navigation
+- top navbar
+- syntax highlighted code blocks
+- copy code button
+- dark mode toggle
+- client-side search
+- English and Indonesian translations
 
-Backurus bukan sekadar clone Laravel dalam JavaScript. Nilai utamanya ada pada kombinasi berikut:
+Open [docs/index.html](/home/rakarawr/Documents/project/2026/testai/docs/index.html) in a browser to browse the local docs.
 
-- DX yang familiar
-- codebase yang kecil dan mudah dipahami
-- fitur backend yang sudah lengkap untuk API modern
-- struktur yang cukup opinionated untuk menjaga kecepatan tim
+## Backurus Workflow
 
-Jika Express terlalu mentah dan NestJS terasa terlalu berat, Backurus mengisi ruang di tengah dengan pendekatan yang lebih pragmatis.
+A typical API workflow looks like this:
 
-## Roadmap yang Layak Dilanjutkan
+```bash
+node urus make:model Product
+node urus make:controller ProductController
+node urus make:request StoreProductRequest
+node urus make:migration create_products_table
+node urus migrate
+node urus serve
+```
 
-Beberapa area yang secara natural bisa memperkuat Backurus ke depan:
-
-- test runner dan assertion utilities bawaan
-- storage adapter tambahan seperti S3-compatible disk
-- cache driver yang lebih kaya
-- mailer abstraction
-- OpenAPI generation yang lebih dalam
-- rate limiting dan observability yang lebih detail
-
-## Ringkasnya
-
-Backurus cocok dipamerkan sebagai framework backend Node.js yang:
-
-- punya identitas sendiri
-- jelas target penggunanya
-- nyaman dipakai untuk bangun API
-- familiar untuk developer Laravel
-- sudah membawa banyak fitur penting tanpa setup berlapis
-
-Jika Anda ingin framework backend API yang cepat, readable, dan terasa familiar, Backurus punya arah yang kuat.
+Backurus is built for teams that want the ergonomics of Laravel with the runtime and ecosystem of Node.js.

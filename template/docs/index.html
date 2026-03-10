@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="icon" type="image/png" href="./images/favicon.png">
 </head>
@@ -33,15 +34,23 @@
     </aside>
     <main class="content">
       <div class="topbar"><div class="topbar-main"><button class="mobile-toggle" data-i18n="ui.open_menu" data-i18n-aria="ui.open_menu"></button><h1 data-i18n="home.title"></h1><p data-i18n="home.lead"></p></div><div class="toolbar"><div class="segmented"><button data-lang-switch="en" data-i18n="ui.english"></button><button data-lang-switch="id" data-i18n="ui.indonesian"></button></div><div class="theme-toggle"><button data-theme-switch="light" data-i18n="ui.light"></button><button data-theme-switch="dark" data-i18n="ui.dark"></button></div></div></div>
-      <section class="hero"><div class="hero-grid"><div class="hero-copy"><p data-i18n="site.tagline"></p><div class="hero-actions"><a class="button primary" href="quickstart.html" data-i18n="ui.hero_primary"></a><a class="button" href="cli.html" data-i18n="ui.hero_secondary"></a></div></div><div class="hero-panel"><h2 data-i18n="home.panel_title"></h2><p data-i18n="home.panel_body"></p><div class="callout"><h3 data-i18n="ui.updated_for"></h3><p>`node urus` | ORM | JWT | Queue | Schedule</p></div></div></div><div class="card-grid"><article class="doc-card"><h3 data-i18n="home.card_one_title"></h3><p data-i18n="home.card_one_body"></p></article><article class="doc-card"><h3 data-i18n="home.card_two_title"></h3><p data-i18n="home.card_two_body"></p></article><article class="doc-card"><h3 data-i18n="home.card_three_title"></h3><p data-i18n="home.card_three_body"></p></article></div></section>
-      <article class="article"><section><h2 data-i18n="home.section_one_title"></h2><p data-i18n="home.section_one_body"></p></section><section><h2 data-i18n="home.section_two_title"></h2><p data-i18n="home.section_two_body"></p></section><section><h2 data-i18n="home.section_three_title"></h2><ul><li data-i18n="home.section_three_item_one"></li><li data-i18n="home.section_three_item_two"></li><li data-i18n="home.section_three_item_three"></li></ul><div class="code-block"><div class="code-header"><span data-i18n="ui.code_example"></span><button class="copy-button" data-copy-label></button></div><pre><code>node urus make:model Product
+      <section class="hero"><div class="hero-grid"><div class="hero-copy"><p data-i18n="site.tagline"></p><div class="hero-actions"><a class="button primary" href="quickstart.html" data-i18n="ui.hero_primary"></a><a class="button" href="cli.html" data-i18n="ui.hero_secondary"></a></div></div><div class="hero-panel"><h2 data-i18n="home.panel_title"></h2><p data-i18n="home.panel_body"></p><div class="callout"><h3 data-i18n="ui.updated_for"></h3><p>`node urus` | Routing | ORM | JWT | Queue | Docs</p></div></div></div><div class="card-grid"><article class="doc-card"><h3 data-i18n="home.card_one_title"></h3><p data-i18n="home.card_one_body"></p></article><article class="doc-card"><h3 data-i18n="home.card_two_title"></h3><p data-i18n="home.card_two_body"></p></article><article class="doc-card"><h3 data-i18n="home.card_three_title"></h3><p data-i18n="home.card_three_body"></p></article></div></section>
+      <article class="article">
+        <section><h2 data-i18n="home.section_one_title"></h2><p data-i18n="home.section_one_body"></p></section>
+        <section><h2 data-i18n="home.section_two_title"></h2><p data-i18n="home.section_two_body"></p></section>
+        <section><h2 data-i18n="home.section_three_title"></h2><ul><li data-i18n="home.section_three_item_one"></li><li data-i18n="home.section_three_item_two"></li><li data-i18n="home.section_three_item_three"></li></ul><div class="code-block"><div class="code-header"><span data-i18n="ui.code_example"></span><button class="copy-button" data-copy-label></button></div><pre class="language-bash"><code class="language-bash">node urus make:model Product
 node urus make:controller ProductController
+node urus make:request StoreProductRequest
+node urus make:migration create_products_table
 node urus migrate
-node urus db:seed
-node urus serve</code></pre></div></section></article>
+node urus serve</code></pre></div></section>
+      </article>
       <div class="footer" data-i18n="site.footer"></div>
     </main>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
   <script type="module" src="./assets/js/main.js"></script>
 </body>
 </html>

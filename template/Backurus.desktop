@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Backurus CLI
+Comment=Run Backurus CLI from the project root
+Exec=node /home/rakarawr/Documents/project/2026/testai/urus
+Icon=/home/rakarawr/Documents/project/2026/testai/docs/images/favicon.png
+Path=/home/rakarawr/Documents/project/2026/testai
+Terminal=true
+Categories=Development;
+StartupNotify=false

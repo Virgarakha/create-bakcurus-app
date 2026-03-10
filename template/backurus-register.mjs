@@ -3,4 +3,4 @@ import { register } from 'node:module'
 import { pathToFileURL } from 'node:url'
 
 const loaderPath = pathToFileURL(path.resolve(process.cwd(), 'backurus-loader.mjs')).href
-register(loaderPath, pathToFileURL('./'))
+register(loaderPath, import.meta.url)

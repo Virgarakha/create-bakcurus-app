@@ -1,7 +1,8 @@
 import path from 'node:path'
 import { spawn } from 'node:child_process'
+import { pathToFileURL } from 'node:url'
 
-const registerFile = path.resolve(process.cwd(), 'backurus-register.mjs')
+const registerFile = pathToFileURL(path.resolve(process.cwd(), 'backurus-register.mjs')).href
 
 if (!process.execArgv.includes('--import')) {
   const child = spawn(process.execPath, ['--import', registerFile, process.argv[1], ...process.argv.slice(2)], {

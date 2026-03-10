@@ -1,4 +1,6 @@
-# Backurus
+# <div align="center"><img src="./docs/images/favicon.png" alt="Backurus logo" width="120" /></div>
+
+# <div align="center">Backurus</div>
 
 A Modern Backend Framework for Node.js inspired by Laravel.
 

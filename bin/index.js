@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
 import fs from "fs-extra"
+import { fileURLToPath } from "url"
 import path from "path"
 import inquirer from "inquirer"
 import chalk from "chalk"
 import { execSync } from "child_process"
 
-const templateDir = new URL("../template", import.meta.url).pathname
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const templateDir = path.join(__dirname, "../template")
 
 async function run() {
 

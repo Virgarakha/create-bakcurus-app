@@ -51,7 +51,24 @@ DB_USERNAME=root
 DB_PASSWORD=secret
 JWT_SECRET=supersecretkey
 QUEUE_CONNECTION=sync
+CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
 ```
+
+For frontend integration, Backurus also supports built-in CORS configuration:
+
+```env
+CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
+CORS_METHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+CORS_HEADERS=Content-Type, Authorization, X-Requested-With
+CORS_EXPOSE_HEADERS=
+CORS_MAX_AGE=86400
+CORS_CREDENTIALS=false
+```
+
+- `CORS_ORIGIN`: comma-separated whitelist of allowed origins.
+- `CORS_EXPOSE_HEADERS`: headers readable by the browser, useful for tokens or pagination metadata.
+- `CORS_MAX_AGE`: cache duration for preflight responses in seconds.
+- `CORS_CREDENTIALS`: enable only if the frontend uses cookies or `withCredentials`.
 
 ## CLI Commands
 

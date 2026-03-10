@@ -19,6 +19,50 @@ async function runStack(stack, req, res) {
   return runner(0)
 }
 
+function splitList(value) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function resolveAllowedOrigin(origin, corsConfig) {
+  const configured = splitList(corsConfig.origin || '*')
+  if (!configured.length || configured.includes('*')) {
+    return corsConfig.credentials && origin ? origin : '*'
+  }
+  if (origin && configured.includes(origin)) return origin
+  return configured[0] || null
+}
+
+function applyCorsHeaders(req, res, corsConfig = {}) {
+  const origin = req.headers.origin
+  const allowedOrigin = resolveAllowedOrigin(origin, corsConfig)
+  if (allowedOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
+    res.setHeader('Vary', 'Origin, Access-Control-Request-Headers')
+  }
+
+  if (corsConfig.credentials) {
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+
+  const requestedHeaders = req.headers['access-control-request-headers']
+  res.setHeader('Access-Control-Allow-Methods', corsConfig.methods || 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    requestedHeaders || corsConfig.headers || 'Content-Type, Authorization, X-Requested-With'
+  )
+
+  if (corsConfig.exposedHeaders) {
+    res.setHeader('Access-Control-Expose-Headers', corsConfig.exposedHeaders)
+  }
+
+  if (corsConfig.maxAge) {
+    res.setHeader('Access-Control-Max-Age', String(corsConfig.maxAge))
+  }
+}
+
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',
   '.gif': 'image/gif',
@@ -91,6 +135,14 @@ export class Server {
     const parsedUrl = new URL(req.url, 'http://127.0.0.1')
     req.path = parsedUrl.pathname
     req.query = Object.fromEntries(parsedUrl.searchParams.entries())
+    applyCorsHeaders(req, res, this.config.cors)
+
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 204
+      res.end()
+      return
+    }
+
     const parsedRequest = await parseRequest(req)
     req.body = parsedRequest.body
     req.files = parsedRequest.files

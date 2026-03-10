@@ -27,6 +27,14 @@ export function loadConfig() {
     database,
     queue,
     storage,
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173',
+      methods: process.env.CORS_METHODS || 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+      headers: process.env.CORS_HEADERS || 'Content-Type, Authorization, X-Requested-With',
+      exposedHeaders: process.env.CORS_EXPOSE_HEADERS || '',
+      maxAge: Number(process.env.CORS_MAX_AGE || 86400),
+      credentials: ['1', 'true', 'yes'].includes(String(process.env.CORS_CREDENTIALS || '').toLowerCase())
+    },
     rateLimit: {
       max: Number(process.env.RATE_LIMIT_MAX || 100),
       windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60000)

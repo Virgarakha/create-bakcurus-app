@@ -93,13 +93,62 @@ async function withApp(callback) {
 
 function startServe() {
   let child = null
-  const spawnServer = () => {
-    if (child) child.kill('SIGTERM')
-    child = spawn('node', ['index.js'], { stdio: 'inherit', cwd: process.cwd() })
+  let watcher = null
+  let shuttingDown = false
+
+  const stopChild = (signal = 'SIGTERM') => {
+    if (!child || child.killed) return
+    child.kill(signal)
   }
+
+  const cleanup = async (signal = null) => {
+    if (shuttingDown) return
+    shuttingDown = true
+
+    if (watcher) {
+      await watcher.close().catch(() => {})
+    }
+
+    stopChild(signal === 'SIGKILL' ? 'SIGKILL' : 'SIGTERM')
+
+    if (signal) {
+      process.exit(0)
+    }
+  }
+
+  const spawnServer = () => {
+    stopChild('SIGTERM')
+    child = spawn(process.execPath, ['index.js'], {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+      env: process.env
+    })
+    child.on('exit', () => {
+      child = null
+    })
+  }
+
   spawnServer()
-  chokidar.watch(['app', 'bootstrap', 'config', 'core', 'database', 'routes', 'plugins', 'index.js'], { ignoreInitial: true })
-    .on('all', () => spawnServer())
+  watcher = chokidar.watch(['app', 'bootstrap', 'config', 'core', 'database', 'routes', 'plugins', 'index.js'], {
+    ignoreInitial: true
+  })
+  watcher.on('all', () => spawnServer())
+
+  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
+    process.on(signal, () => {
+      cleanup(signal)
+    })
+  }
+
+  process.on('exit', () => stopChild('SIGTERM'))
+  process.on('uncaughtException', async (error) => {
+    console.error(error.stack || error.message)
+    await cleanup('SIGTERM')
+  })
+  process.on('unhandledRejection', async (error) => {
+    console.error(error?.stack || error?.message || error)
+    await cleanup('SIGTERM')
+  })
 }
 
 async function configCache() {

@@ -13,7 +13,8 @@ function normalizePayload(body) {
 
 export default class ProductController {
   async index(req, res) {
-    return res.success('massasdkajl')
+    const data = await Product.all()
+    return res.success(data, 200)
   }
 
   async show(req, res) {

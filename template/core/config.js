@@ -5,6 +5,7 @@ import database from '../config/database'
 import auth from '../config/auth'
 import queue from '../config/queue'
 import storage from '../config/storage'
+import cache from '../config/cache'
 import { appConfig } from './runtime'
 
 function getValue(source, key) {
@@ -24,6 +25,7 @@ export function loadConfig() {
   return {
     app,
     auth,
+    cache,
     database,
     queue,
     storage,

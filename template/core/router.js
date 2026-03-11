@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { validate } from './validator.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const routesDir = path.resolve(__dirname, '../routes')
@@ -33,6 +34,15 @@ class RouteDefinition {
   constructor(router, route) {
     this.router = router
     this.route = route
+  }
+
+  validate(RequestClass) {
+    // Inserts a validation middleware before route action.
+    this.route.handlers.unshift(async (req, res, next) => {
+      await validate(req, RequestClass)
+      return next()
+    })
+    return this
   }
 
   middleware(names) {

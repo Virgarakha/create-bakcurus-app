@@ -1,522 +1,675 @@
-PANDUAN LENGKAP BACKURUS
+PANDUAN LENGKAP BACKURUS (Framework + Scaffold Project)
 
 Lokasi project:
 /home/rakarawr/Documents/project/2026/testai
+
+Versi Node minimal:
+Node.js >= 20 (project ini berjalan di Node 24).
 
 ==================================================
 1. APA ITU BACKURUS
 ==================================================
 
-Backurus adalah framework backend Node.js bergaya Laravel.
-Fokusnya:
-- syntax sederhana
-- CLI kuat dengan `node urus`
-- ORM ekspresif
-- struktur modular
-- pengembangan REST API yang cepat
+Backurus adalah framework backend Node.js bergaya Laravel (ES Modules).
+Tujuan utamanya: DX yang cepat dan ekspresif untuk membangun REST API.
+
+Yang tersedia di scaffold ini:
+- CLI `node urus` (generator, migrate, serve, queue, schedule, test, dll)
+- Router `Route.get/post/put/delete` dengan aksi `Controller@method` + middleware alias
+- Global error handler (dev/prod) + pretty error page di development
+- Response helper konsisten (format success/error)
+- Validator advanced (nested, array wildcard, file/image, conditional, sanitization, i18n, custom messages)
+- ORM Eloquent-style + query builder + relasi + soft delete
+- Migrations + seeders
+- JWT auth + middleware `auth`
+- Gate/Policy concept
+- Cache (memory / redis) + facade/helper
+- Event bus + facade/helper
+- Queue (sync / redis)
+- Scheduler
+- WebSocket `/ws`
+- Swagger docs route `/docs` dan `/docs.json`
+- Helpers: collect/str fluent + macro, app(container), cache/event/log/faker/limit, facades
+- Testing helper + test runner (`node urus test`)
+- Dev server hot reload dengan restart aman (mencegah EADDRINUSE)
 
 ==================================================
-2. MENJALANKAN PROJECT
+2. STRUKTUR FOLDER PROJECT
 ==================================================
 
-Install dependency:
-
-npm install
-
-Jalankan migration:
-
-node urus migrate
-
-Jalankan seeder:
-
-node urus db:seed
-
-Jalankan server development:
-
-node urus serve
-
-Atau tanpa watcher:
-
-node index.js
+app/
+  controllers/   -> controller API
+  models/        -> model ORM
+  requests/      -> request validation class
+  middleware/    -> middleware custom
+  events/        -> event payload class
+  listeners/     -> event listeners
+  jobs/          -> queue jobs
+  resources/     -> transformer Resource
+  policies/      -> policy
+  modules/       -> modular feature folder
+bootstrap/
+  app.js         -> bootstrapping container + server + plugins + routes + schedule
+config/
+  app.js         -> app config
+  auth.js        -> jwt config
+  cache.js       -> cache driver (memory/redis)
+  database.js    -> database config
+  queue.js       -> queue config
+  storage.js     -> storage config
+core/
+  server.js      -> http server + middleware stack + CORS + static
+  router.js      -> router + controller resolver + route docs
+  response.js    -> response helpers
+  errors/        -> error handler + error classes
+  validator.js   -> advanced validator + sanitize
+  model.js       -> ORM + query builder + relations
+  database.js    -> DB manager + schema builder
+  cache.js       -> memory/redis cache store
+  events.js      -> event bus
+  queue.js       -> queue manager
+  scheduler.js   -> scheduler engine
+  swagger.js     -> docs route (/docs)
+  websocket.js   -> WS hub
+  helpers/       -> helpers fluent + facade + globals
+  testing/       -> test helpers + runner
+database/
+  migrations/    -> migrations
+  seeders/       -> seeders
+plugins/
+  */index.js     -> plugin auto-loaded
+routes/
+  api.js         -> API routes
+  web.js         -> web routes
+  console.js     -> schedule/console routes
+resources/
+  lang/
+    en/validation.js
+    id/validation.js
+public/          -> static file server root
+storage/
+  logs/          -> app logs (Logger)
+logs/
+  error.log      -> error handler logs (5xx/database)
 
 ==================================================
-3. KONFIGURASI DATABASE
+3. MENJALANKAN PROJECT (QUICKSTART)
 ==================================================
 
-File: .env
+1) Install dependencies:
+  npm install
 
-Contoh MySQL:
+2) Jalankan migration:
+  node urus migrate
 
+3) Jalankan seeder:
+  node urus db:seed
+
+4) Jalankan development server (watcher + hot reload):
+  node urus serve
+
+5) Jalankan server tanpa watcher:
+  node index.js
+
+Catatan:
+- `node urus serve` menampilkan banner + status loading + ringkasan routes/plugins/modules.
+- Hot reload sudah memakai restart aman (stop -> wait -> start) agar tidak terjadi port conflict (EADDRINUSE).
+
+==================================================
+4. ENV & KONFIGURASI
+==================================================
+
+File utama: `.env`
+
+Contoh:
 APP_NAME=Backurus
-APP_PORT=3000
+APP_PORT=3001
 APP_ENV=development
+APP_URL=http://127.0.0.1:3001
+APP_LOCALE=id
+
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=testfw
 DB_USERNAME=root
-DB_PASSWORD=Rakha123!
+DB_PASSWORD=secret
+
 JWT_SECRET=supersecretkey
+
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
 QUEUE_CONNECTION=sync
 
-Backurus saat ini mendukung:
-- mysql
-- sqlite
+CACHE_DRIVER=memory
+CACHE_PREFIX=backurus:
+
+RATE_LIMIT_MAX=100
+RATE_LIMIT_WINDOW_MS=60000
+
+CORS_ORIGIN=http://localhost:5173
+CORS_METHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+CORS_HEADERS=Content-Type, Authorization, X-Requested-With
+CORS_CREDENTIALS=false
+
+Catatan:
+- Konfigurasi dirangkum di `core/config.js` dan `config/*`.
+- Cache config ada di `config/cache.js`.
+- Jangan commit `.env` ke repository publik.
 
 ==================================================
-4. SEMUA COMMAND CLI BACKURUS
+5. CLI (node urus)
 ==================================================
 
 Generator:
+  node urus make:controller UserController
+  node urus make:model User
+  node urus make:migration create_users_table
+  node urus make:middleware AuthMiddleware
+  node urus make:request StoreUserRequest
+  node urus make:job SendEmailJob
+  node urus make:event UserRegistered
+  node urus make:seeder UserSeeder
+  node urus make:policy UserPolicy
+  node urus make:resource UserResource
+  node urus make:module Admin
 
-node urus make:controller UserController
-node urus make:model User
-node urus make:migration create_users_table
-node urus make:middleware AuthMiddleware
-node urus make:request StoreUserRequest
-node urus make:job SendEmailJob
-node urus make:event UserRegistered
-node urus make:seeder UserSeeder
-node urus make:policy UserPolicy
-node urus make:resource UserResource
-node urus make:module Admin
+Database & routes:
+  node urus migrate
+  node urus migrate:rollback
+  node urus migrate:reset
+  node urus migrate:fresh
+  node urus migrate:status
+  node urus db:seed
+  node urus route:list
 
-Database dan route:
+Queue & scheduler:
+  node urus queue:work
+  node urus queue:restart
+  node urus schedule:run
 
-node urus migrate
-node urus migrate:rollback
-node urus migrate:reset
-node urus migrate:fresh
-node urus migrate:status
-node urus db:seed
-node urus route:list
+Serve & config:
+  node urus serve
+  node urus config:cache
+  node urus config:clear
+  node urus storage:link
 
-Queue dan scheduler:
-
-node urus queue:work
-node urus queue:restart
-node urus schedule:run
-
-Server dan config:
-
-node urus serve
-node urus config:cache
-node urus config:clear
+Testing:
+  node urus test
 
 ==================================================
-5. ROUTING BACKURUS
+6. ROUTING
 ==================================================
 
-File route ada di folder:
+Routes ada di:
 - routes/api.js
 - routes/web.js
 - routes/console.js
 
-Contoh route:
+Contoh REST routes:
+Route.get('/users', 'UserController@index').name('users.index')
+Route.post('/users', 'UserController@store').name('users.store')
+Route.get('/users/:id', 'UserController@show').name('users.show')
+Route.put('/users/:id', 'UserController@update').name('users.update')
+Route.delete('/users/:id', 'UserController@destroy').name('users.destroy')
 
-Route.get('/users', 'UserController@index')
-Route.post('/users', 'UserController@store')
-Route.put('/users/:id', 'UserController@update')
-Route.delete('/users/:id', 'UserController@destroy')
-
-Dengan middleware:
-
+Middleware alias:
 Route.get('/profile', 'UserController@profile').middleware('auth')
 
-Lihat semua route:
+VALIDASI AUTO DI ROUTE:
+Route.post('/users', 'UserController@store')
+  .validate(StoreUserRequest)
+  .name('users.store')
 
-node urus route:list
+Lihat semua routes:
+  node urus route:list
+
+Docs routes (Swagger UI):
+  GET /docs
+  GET /docs.json
 
 ==================================================
-6. CONTROLLER
+7. CONTROLLER & RESPONSE
 ==================================================
 
-Contoh controller:
-
+Controller pattern:
 export default class UserController {
   async index(req, res) {
     const users = await User.all()
-    return res.success(users)
+    return res.success(users, 'OK')
   }
 }
 
-Helper response yang tersedia:
-- res.success(data)
-- res.created(data)
-- res.error(message, statusCode)
-- res.notFound(message)
-- res.unauthorized(message)
-- res.paginated(items, meta)
-
-==================================================
-7. ORM BACKURUS
-==================================================
-
-File model contoh:
-
-import Model from '../../core/model.js'
-
-export default class User extends Model {
-  static table = 'users'
+Response format (success):
+{
+  "status": "success",
+  "success": true,
+  "code": 200,
+  "message": "OK",
+  "data": ...
 }
 
-CRUD dasar:
+Response format (error):
+{
+  "status": "error",
+  "success": false,
+  "code": 422,
+  "type": "validation",
+  "message": "Validation failed",
+  "errors": { ... }
+}
 
-await User.all()
-await User.find(1)
-await User.create({ name: 'Rakha', email: 'rakha@email.com' })
-await User.update(1, { name: 'Rakha Aja' })
-await User.delete(1)
+Helpers response (core/response.js):
+- res.success(data, message = 'OK', statusCode = 200)
+- res.created(data, message = 'Created', statusCode = 201)
+- res.paginated(items, meta, message = 'OK')
+- res.error(message, code = 400, errors = null)
+- res.validationError(errors, message = 'Validation failed')
+- res.serverError(message = 'Internal Server Error')
+- res.databaseError(message, code = 500)
+- res.notFound(message = 'Not Found')
+- res.unauthorized(message = 'Unauthorized')
+- res.forbidden(message = 'Forbidden')
 
-Query builder:
+==================================================
+8. GLOBAL ERROR HANDLING (DEV vs PROD)
+==================================================
 
-await User.where('age', '>', 18).get()
-await User.where('email', 'rakha@email.com').first()
-await User.orderBy('created_at', 'desc').limit(10).get()
-await User.paginate(10)
+Semua thrown error ditangani oleh global error handler (core/errors/Handler.js).
 
-Relasi:
-- hasOne
-- hasMany
-- belongsTo
-- belongsToMany
+Mode development (APP_ENV=development):
+- JSON error response menyertakan: file, line, stack
+- Jika request Accept `text/html`, akan menampilkan pretty error page.
+
+Mode production (APP_ENV=production):
+- Error 5xx disamarkan menjadi "Internal Server Error"
+- Error 4xx yang exposed tetap menampilkan message
+
+HTTP error classes (core/errors/HttpError.js):
+- HttpError
+- NotFoundError
+- UnauthorizedError
+- ForbiddenError
+- ValidationError
+- DatabaseError
 
 Contoh:
+throw new NotFoundError('User not found')
 
-User.hasMany(Post, 'user_id')
-Post.belongsTo(User, 'user_id')
-User.belongsToMany(Role, 'role_user', 'user_id', 'role_id')
-
-Soft delete:
-
-export default class Product extends Model {
-  static table = 'products'
-  static softDeletes = true
-}
+Logging:
+- error handler menulis ke `logs/error.log` untuk error 5xx dan database.
 
 ==================================================
-8. VALIDASI REQUEST
+9. VALIDATION (REQUEST, SCHEMA, SANITIZE)
 ==================================================
 
-Contoh request:
+Backurus punya validator advanced di `core/validator.js`.
 
-export default class StoreUserRequest {
+A) Request Class (seperti Laravel FormRequest)
+class StoreUserRequest {
   rules() {
     return {
-      name: 'required|min:3',
+      name: 'required|alpha_spaces|min:3',
       email: 'required|email',
-      password: 'required|min:6'
+      password: 'required|password'
+    }
+  }
+
+  messages() {
+    return {
+      email: {
+        required: 'Email wajib diisi',
+        email: 'Format email tidak valid'
+      }
+    }
+  }
+
+  sanitize() {
+    return {
+      name: 'trim',
+      email: 'trim|lowercase'
     }
   }
 }
 
 Pakai di controller:
+  await validate(req, StoreUserRequest)
 
-await validate(req, StoreUserRequest)
+Atau auto di route:
+  Route.post('/users', 'UserController@store').validate(StoreUserRequest)
 
-Aturan yang tersedia sekarang:
-- required
-- email
-- min
-- max
+B) Schema Validation langsung (data + rules)
+  await validate(data, {
+    'user.name': 'required|min:3',
+    'user.email': 'required|email'
+  })
+
+C) Nested object & array wildcard
+Nested:
+  validate(data, { 'user.name': 'required' })
+
+Array wildcard:
+  validate(data, { tags: 'array', 'tags.*': 'string|min:2' })
+
+D) Conditional rules
+- required_if:role,admin
+- required_unless:role,admin
+- required_with:fieldA,fieldB
+- required_without:fieldA,fieldB
+
+E) File & image validation (multipart/form-data)
+File object dari `core/request.js` berbentuk:
+  { originalName, mimetype, size, buffer }
+
+Rules:
+- file
+- mimes:jpg,png
+- image
+- dimensions:min_width=100,min_height=100
+- min / max (untuk file dihitung dalam KB jika file-like)
+
+Contoh:
+  await validate({}, { avatar: 'required|file|mimes:png,jpg|max:2048' }, null, { files: req.files })
+
+F) Localization
+File i18n:
+  resources/lang/en/validation.js
+  resources/lang/id/validation.js
+
+Set locale:
+  APP_LOCALE=id
+
+G) Sanitization helper
+  const clean = sanitize(data, { name: 'trim', username: 'slug' })
+
+H) Hooks style fluent
+  await validator(data, rules)
+    .before((data) => { data.email = String(data.email || '').trim() })
+    .sanitize({ email: 'lowercase' })
+    .after((_data, { errors }) => { /* logging */ })
+    .validate()
 
 ==================================================
-9. MIGRATION DAN SCHEMA BUILDER
+10. REQUEST PARSING (JSON, FORM, MULTIPART)
 ==================================================
 
-Contoh migration Backurus:
+Backurus membaca body di `core/request.js`:
+- application/json -> parsed JSON
+- application/x-www-form-urlencoded -> URLSearchParams
+- multipart/form-data -> body fields + files (Buffer)
 
+Helper:
+- req.body, req.query, req.params
+- req.files dan req.file(name) untuk akses file single
+
+==================================================
+11. ORM & QUERY BUILDER
+==================================================
+
+Model:
+import Model from '../../core/model'
+export default class User extends Model {
+  static table = 'users'
+}
+
+CRUD:
+  await User.all()
+  await User.find(1)
+  await User.create({ name: 'Rakha' })
+  await User.update(1, { name: 'Rakha Aja' })
+  await User.delete(1)
+
+Query builder:
+  await User.where('age', '>', 18).get()
+  await User.where('email', 'a@b.com').first()
+  await User.orderBy('created_at', 'desc').limit(10).get()
+  await User.paginate(10, 1)
+  await User.with('posts').find(1)
+
+Relasi:
+- hasMany, hasOne, belongsTo, belongsToMany
+
+Soft delete:
+  static softDeletes = true
+
+==================================================
+12. MIGRATIONS & SCHEMA BUILDER
+==================================================
+
+Contoh migration:
 export default {
   async up(schema) {
     await schema.create('users', (table) => {
       table.id()
       table.string('name')
       table.string('email').unique()
-      table.string('password')
-      table.enum('role', ['admin', 'user']).default('user')
-      table.integer('age').nullable()
-      table.boolean('active').default(true)
       table.timestamps()
     })
   },
-
   async down(schema) {
     await schema.drop('users')
   }
 }
 
-Tipe kolom:
-- table.id()
-- table.string('name')
-- table.text('description')
-- table.integer('age')
-- table.bigInteger('views')
-- table.boolean('active')
-- table.date('birthday')
-- table.datetime('published_at')
-- table.timestamp('created_at')
-- table.enum('role', ['admin','user'])
-- table.json('meta')
-- table.float('score')
-- table.double('rating')
-- table.decimal('price', 12, 2)
-- table.foreignId('user_id').constrained('users')
-- table.timestamps()
-
-Modifier kolom:
-- nullable()
-- default(value)
-- unique()
-- index()
-- unsigned()
-
-Command migration:
-
-node urus migrate
-node urus migrate:rollback
-node urus migrate:reset
-node urus migrate:fresh
-node urus migrate:status
+Command:
+  node urus migrate
+  node urus migrate:rollback
+  node urus migrate:reset
+  node urus migrate:fresh
+  node urus migrate:status
 
 ==================================================
-10. SEEDER
+13. SEEDERS + FAKER
 ==================================================
 
 Buat seeder:
+  node urus make:seeder UserSeeder
 
-node urus make:seeder UserSeeder
+Run:
+  node urus db:seed
 
-Jalankan semua seeder:
+Gunakan faker helper:
+  const user = await User.create({ name: faker().name(), email: faker().email() })
 
-node urus db:seed
+==================================================
+14. AUTH JWT + MIDDLEWARE
+==================================================
+
+Routes default:
+  Route.post('/login', 'AuthController@login')
+  Route.post('/register', 'AuthController@register')
+  Route.get('/profile', 'UserController@profile').middleware('auth')
+
+Middleware alias `auth` akan:
+- cek `Authorization: Bearer <token>`
+- verify token via JWT_SECRET
+
+==================================================
+15. GATE / POLICY
+==================================================
+
+Facade:
+  Gate.define('update-post', (user, post) => user.id === post.user_id)
+  await Gate.authorize('update-post', user, post)
+
+==================================================
+16. CACHE
+==================================================
+
+Driver:
+- memory (default)
+- redis (set CACHE_DRIVER=redis)
+
+Facade:
+  await Cache.set('users', data, 60)
+  await Cache.get('users')
+  await Cache.remember('users', 60, async () => await User.all())
+  await Cache.delete('users')
+  await Cache.flush()
+
+Helper:
+  await cache().remember('users', 60, async () => await User.all())
+
+==================================================
+17. EVENTS
+==================================================
+
+Helper:
+  event('user.created', user)
+  listen('user.created', async (user) => { /* ... */ })
+
+Facade:
+  Event.emit('user.created', user)
+  Event.listen('user.created', handler)
+
+==================================================
+18. QUEUE
+==================================================
+
+Queue driver:
+- sync (default)
+- redis (set QUEUE_CONNECTION=redis)
+
+Dispatch:
+  await Queue.dispatch(new SendEmailJob(user))
+  await Queue.dispatchLater(new SendEmailJob(user), 3000)
+
+Worker:
+  node urus queue:work
+  node urus queue:restart
+
+==================================================
+19. SCHEDULER
+==================================================
+
+File:
+  routes/console.js
+
+Run:
+  node urus schedule:run
+
+==================================================
+20. PLUGINS
+==================================================
+
+Plugins auto-loaded dari `plugins/*/index.js`.
+Contoh plugin logger ada di `plugins/logger-plugin/index.js`.
+
+==================================================
+21. WEBSOCKET
+==================================================
+
+Endpoint:
+  /ws
+
+Emit dari server:
+  req.container.make('ws').emit('notification', { message: 'Hello' })
+
+==================================================
+22. SWAGGER DOCS
+==================================================
+
+Routes:
+  GET /docs.json
+  GET /docs
+
+==================================================
+23. HELPERS (FLUENT + MACRO + APP + FACADE)
+==================================================
+
+Helpers global (registered saat bootstrap):
+- collect(), str(), app(), cache(), event(), listen(), log(), faker(), limit()
+- Facade objects: Cache, DB, Event, Gate, Log, Queue, Storage
+- validate(), validator(), sanitize()
+
+Collection fluent:
+  collect(users)
+    .filter((u) => u.active)
+    .pluck('email')
+    .unique()
+    .values()
+    .all()
+
+String fluent:
+  str('hello world')
+    .slug()
+    .upper()
+    .toString()
+
+Macro system:
+  str.macro('reverse', (value) => value.split('').reverse().join(''))
+  str('rakha').reverse().toString()
+
+Service container:
+  app.bind('mailer', MailService)
+  const mailer = app.make('mailer')
+
+Rate limit helper per-route:
+  Route.post('/login', 'AuthController@login', limit('login', 10, 60))
+
+==================================================
+24. LOGGING
+==================================================
+
+1) Framework error logs (global handler):
+  logs/error.log
+
+2) App logs via Logger service:
+  storage/logs/backurus.log
+
+Facade/helper:
+  await Log.info('User created', { userId: 1 })
+  await log().error('Database failed')
+
+==================================================
+25. TESTING
+==================================================
+
+Test runner:
+  node urus test
+
+Lokasi file:
+  tests/*.test.js
+
+Testing globals:
+- test(name, fn)
+- expect(value).toBe(...)
+- http.get/post/... (baseUrl dari TEST_BASE_URL atau APP_URL/APP_PORT)
 
 Contoh:
-
-export default {
-  async run() {
-    await User.create({
-      name: 'Admin',
-      email: 'admin@example.com',
-      password: 'hashed-password'
-    })
-  }
-}
-
-==================================================
-11. AUTH JWT
-==================================================
-
-Route default:
-
-Route.post('/login', 'AuthController@login')
-Route.post('/register', 'AuthController@register')
-Route.get('/profile', 'UserController@profile').middleware('auth')
-
-Fitur auth yang tersedia:
-- register
-- login
-- bearer token verification
-- auth middleware alias `auth`
-- role guard manual di route/controller
-
-==================================================
-12. MIDDLEWARE
-==================================================
-
-Contoh:
-
-Route.get('/profile', 'UserController@profile').middleware('auth')
-
-Buat middleware baru:
-
-node urus make:middleware AdminMiddleware
-
-==================================================
-13. API RESOURCE
-==================================================
-
-Buat resource:
-
-node urus make:resource UserResource
-
-Contoh:
-
-import { Resource } from '../../core/resource.js'
-
-export default class UserResource extends Resource {
-  toJSON() {
-    return {
-      id: this.resource.id,
-      name: this.resource.name,
-      email: this.resource.email
-    }
-  }
-}
-
-==================================================
-14. POLICY DAN GATE
-==================================================
-
-Buat policy:
-
-node urus make:policy UserPolicy
-
-Gate facade tersedia di:
-- core/facades.js
-
-Contoh konsep:
-
-Gate.define('update-post', (user, post) => {
-  return user.id === post.user_id
+test('create user', async () => {
+  const res = await http.post('/users', { name: 'Rakha' })
+  expect(res.status).toBe(201)
 })
 
 ==================================================
-15. QUEUE
+26. TROUBLESHOOTING
 ==================================================
 
-Dispatch job:
+1) Port conflict (EADDRINUSE)
+- Hot reload sudah restart aman.
+- Jika port masih bentrok, cek ada process lain memakai APP_PORT.
 
-await queue.dispatch(new SendEmailJob(user))
-await queue.dispatchLater(new SendEmailJob(user), 3000)
+2) Error DB connect
+- Pastikan MySQL/Redis hidup dan `.env` benar.
 
-Command queue:
-
-node urus queue:work
-node urus queue:restart
-
-==================================================
-16. SCHEDULER
-==================================================
-
-File scheduler:
-- routes/console.js
-
-Contoh:
-
-export default async function schedule(Schedule) {
-  Schedule.command('route:list').daily()
-}
-
-Jalankan scheduler manual:
-
-node urus schedule:run
+3) Error response tidak detail
+- Pastikan APP_ENV=development.
 
 ==================================================
-17. FACADE
+27. RINGKASAN BUAT RESOURCE BARU (CRUD)
 ==================================================
 
-Facade tersedia di:
-- DB
-- Cache
-- Gate
-
-Contoh:
-
-DB.table('users').where('id', 1).first()
-Cache.put('user:1', data)
-Gate.define('update-post', callback)
-
-==================================================
-18. PLUGIN
-==================================================
-
-Plugin diletakkan di folder:
-- plugins/
-
-Plugin akan dimuat otomatis saat bootstrap.
-
-==================================================
-19. WEBSOCKET
-==================================================
-
-WebSocket bawaan tersedia di endpoint:
-- /ws
-
-Emit message:
-
-ws.emit('notification', data)
-
-==================================================
-20. CONTOH CRUD PRODUCT
-==================================================
-
-Route:
-- GET /products
-- POST /products
-- GET /products/:id
-- PUT /products/:id
-- DELETE /products/:id
-
-Model:
-- app/models/Product.js
-
-Controller:
-- app/controllers/ProductController.js
-
-Request:
-- app/requests/StoreProductRequest.js
-
-Migration:
-- database/migrations/20260310010000_create_products_table.js
-
-Seeder:
-- database/seeders/ProductSeeder.js
-
-Test endpoint:
-
-curl -X GET http://127.0.0.1:3000/products
-
-curl -X POST http://127.0.0.1:3000/products \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "USB-C Dock",
-    "description": "Docking station",
-    "price": 899000,
-    "stock": 12
-  }'
-
-==================================================
-21. DOKUMENTASI WEBSITE
-==================================================
-
-Buka:
-- docs/index.html
-
-Halaman docs yang tersedia:
-- installation
-- quickstart
-- routing
-- controllers
-- models
-- migrations
-- validation
-- authentication
-- queue
-- websocket
-- plugins
-- cli
-
-Support:
-- English
-- Indonesian
-- dark mode
-- search
-- copy button code
-
-==================================================
-22. RINGKASAN PEMBUATAN RESOURCE BARU
-==================================================
-
-Untuk membuat CRUD resource baru:
-
-1. node urus make:model NamaModel
-2. node urus make:controller NamaController
-3. node urus make:request StoreNamaRequest
-4. node urus make:migration create_namas_table
-5. node urus make:seeder NamaSeeder
-6. Tambahkan route di routes/api.js
-7. node urus migrate
-8. node urus db:seed
-9. node urus serve
+1) node urus make:model NamaModel
+2) node urus make:controller NamaController
+3) node urus make:request StoreNamaRequest
+4) node urus make:migration create_namas_table
+5) node urus make:seeder NamaSeeder
+6) Tambahkan route di routes/api.js (opsional: `.validate(StoreNamaRequest)`)
+7) node urus migrate
+8) node urus db:seed
+9) node urus serve
 
 Selesai.

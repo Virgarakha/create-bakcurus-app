@@ -10,8 +10,14 @@ export class EventBus {
     this.listeners.set(eventName, list)
   }
 
-  async emit(eventInstance) {
-    const eventName = eventInstance.constructor.name
+  async emit(eventOrName, payload = null) {
+    const eventName = typeof eventOrName === 'string'
+      ? eventOrName
+      : eventOrName?.constructor?.name
+
+    if (!eventName) return
+
+    const eventInstance = typeof eventOrName === 'string' ? payload : eventOrName
     const list = this.listeners.get(eventName) || []
     for (const listener of list) {
       await listener(eventInstance, this.container)
@@ -19,6 +25,6 @@ export class EventBus {
   }
 }
 
-export async function event(eventInstance, container) {
-  return container.make('events').emit(eventInstance)
+export async function event(eventOrName, container, payload = null) {
+  return container.make('events').emit(eventOrName, payload)
 }

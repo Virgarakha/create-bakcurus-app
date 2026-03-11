@@ -13,6 +13,8 @@ import { loadConfig } from '../core/config.js'
 import { Router, loadRoutes } from '../core/router.js'
 import { registerDocsRoute } from '../core/swagger.js'
 import { formatCliError } from '../core/errors/Handler.js'
+import { installTestingGlobals } from '../core/testing/index.js'
+import { runTests } from '../core/testing/runner.js'
 
 dotenv.config()
 
@@ -517,6 +519,9 @@ async function main() {
     case 'storage:link': return storageLink()
     case 'serve': return startServe()
     case 'route:list': return routeList()
+    case 'test':
+      installTestingGlobals()
+      return runTests()
   }
 
   return withApp(async (app) => {
@@ -536,7 +541,7 @@ async function main() {
       case 'queue:restart': return queueRestart()
       case 'schedule:run': return app.container.make('scheduler').runAll()
       default:
-        console.log(`Backurus CLI\n\nCommands:\n- make:controller\n- make:model\n- make:migration\n- make:middleware\n- make:request\n- make:job\n- make:event\n- make:seeder\n- make:policy\n- make:resource\n- make:module\n- migrate\n- migrate:rollback\n- migrate:reset\n- migrate:fresh\n- migrate:status\n- db:seed\n- route:list\n- queue:work\n- queue:restart\n- schedule:run\n- serve\n- storage:link\n- config:cache\n- config:clear`)
+        console.log(`Backurus CLI\n\nCommands:\n- make:controller\n- make:model\n- make:migration\n- make:middleware\n- make:request\n- make:job\n- make:event\n- make:seeder\n- make:policy\n- make:resource\n- make:module\n- migrate\n- migrate:rollback\n- migrate:reset\n- migrate:fresh\n- migrate:status\n- db:seed\n- route:list\n- queue:work\n- queue:restart\n- schedule:run\n- serve\n- test\n- storage:link\n- config:cache\n- config:clear`)
     }
   })
 }

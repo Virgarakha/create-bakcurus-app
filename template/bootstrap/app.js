@@ -4,6 +4,7 @@ import { Container } from '../core/container'
 import { loadConfig } from '../core/config'
 import { loadPlugins } from '../core/plugin'
 import { loadRoutes } from '../core/router'
+import { loadModules } from '../core/modules'
 import { ResponseFactory } from '../core/response'
 import { EventBus } from '../core/events'
 import { QueueManager } from '../core/queue'
@@ -64,6 +65,7 @@ export async function createApp() {
   })
 
   await loadPlugins({ container, config, events, queue, server, ws })
+  await loadModules(server.router, { container, config, events, queue, server, ws })
   await loadRoutes(server.router, { container, config, events, queue, ws })
   await loadSchedule(scheduler)
   registerDocsRoute(server.router)

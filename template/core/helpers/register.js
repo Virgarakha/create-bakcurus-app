@@ -8,6 +8,7 @@ import { log } from './log.js'
 import { str } from './str.js'
 import { Cache, DB, Event, Gate, Log, Queue, Storage } from '../facades.js'
 import { sanitize, validate, validator } from '../validator.js'
+import { config } from '../config.js'
 
 export function registerGlobals() {
   const defs = {
@@ -23,6 +24,7 @@ export function registerGlobals() {
     sanitize,
     validate,
     validator,
+    config,
     Cache,
     DB,
     Event,

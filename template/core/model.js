@@ -13,9 +13,32 @@ export default class Model {
   static primaryKey = 'id'
   static timestamps = true
   static softDeletes = false
+  static hidden = []
 
   static db() {
     return appContainer.make('db')
+  }
+
+  static serialize(record) {
+    if (!record) return record
+    const out = { ...record }
+    const hidden = new Set([...(this.hidden || [])])
+    if (this.softDeletes) hidden.add('deleted_at')
+    for (const key of hidden) {
+      delete out[key]
+    }
+    return out
+  }
+
+  static serializeMany(records) {
+    if (!Array.isArray(records)) return records
+    return records.map((record) => this.serialize(record))
+  }
+
+  static makeHidden(...keys) {
+    const next = new Set([...(this.hidden || []), ...keys.flat().filter(Boolean)])
+    this.hidden = Array.from(next)
+    return this
   }
 
   static query() {
@@ -218,7 +241,8 @@ class QueryBuilder {
   async get() {
     const { sql, params } = this.buildWhere()
     const rows = await this.model.db().all(`SELECT * FROM ${this.model.table}${sql}${this.buildTail()}`, params)
-    return this.model.loadRelations(rows, this.relations)
+    const withRelations = await this.model.loadRelations(rows, this.relations)
+    return this.model.serializeMany(withRelations)
   }
 
   async first() {
@@ -226,7 +250,7 @@ class QueryBuilder {
     const row = await this.model.db().get(`SELECT * FROM ${this.model.table}${sql}${this.orderByClause} LIMIT 1`, params)
     if (!row) return null
     const [record] = await this.model.loadRelations([row], this.relations)
-    return record
+    return this.model.serialize(record)
   }
 
   async paginate(page = 1, perPage = 15) {
@@ -238,7 +262,7 @@ class QueryBuilder {
     const countRow = await this.model.db().get(`SELECT COUNT(*) as total FROM ${this.model.table}${sql}`, params)
     const hydratedItems = await this.model.loadRelations(items, this.relations)
     return {
-      data: hydratedItems,
+      data: this.model.serializeMany(hydratedItems),
       meta: {
         total: countRow?.total || 0,
         perPage: safePerPage,

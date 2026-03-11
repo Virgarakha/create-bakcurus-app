@@ -150,6 +150,7 @@ export class Server {
       req.body = parsedRequest.body
       req.files = parsedRequest.files
       req.rawBody = parsedRequest.rawBody
+      req.validated = () => req.body
       req.file = (name) => {
         const value = req.files?.[name]
         return Array.isArray(value) ? value[0] : value || null

@@ -109,6 +109,20 @@ class SchemaBuilder {
     this.db.prepare(sql).run()
   }
 
+  async indexExists(tableName, indexName) {
+    if (this.client !== 'mysql') return false
+    const [rows] = await this.db.execute(
+      `SELECT 1 AS ok
+       FROM information_schema.statistics
+       WHERE table_schema = DATABASE()
+         AND table_name = ?
+         AND index_name = ?
+       LIMIT 1`,
+      [tableName, indexName]
+    )
+    return Boolean(rows?.length)
+  }
+
   async create(name, callback) {
     const blueprint = new TableBlueprint(name)
     callback(blueprint)
@@ -116,7 +130,21 @@ class SchemaBuilder {
     await this.exec(`CREATE TABLE IF NOT EXISTS ${name} (${columnSql})`)
 
     for (const column of blueprint.columns.filter((item) => item.modifiers.index)) {
-      await this.exec(`CREATE INDEX IF NOT EXISTS ${name}_${column.name}_index ON ${name} (${column.name})`)
+      const indexName = `${name}_${column.name}_index`
+      if (this.client === 'mysql') {
+        const exists = await this.indexExists(name, indexName)
+        if (exists) continue
+        try {
+          await this.exec(`CREATE INDEX ${indexName} ON ${name} (${column.name})`)
+        } catch (error) {
+          // Ignore index already exists races.
+          if (String(error?.code || '') === 'ER_DUP_KEYNAME') continue
+          if (String(error?.message || '').toLowerCase().includes('duplicate key name')) continue
+          throw error
+        }
+        continue
+      }
+      await this.exec(`CREATE INDEX IF NOT EXISTS ${indexName} ON ${name} (${column.name})`)
     }
   }
 

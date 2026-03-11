@@ -1,4 +1,4 @@
-function createSpec(router) {
+export function createSpec(router) {
   const paths = {}
   for (const route of router.docs) {
     paths[route.path] = paths[route.path] || {}

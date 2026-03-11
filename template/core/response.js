@@ -76,6 +76,18 @@ export class ResponseFactory {
       data: items,
       meta
     })
+
+    res.collection = (items = [], meta = null, message = 'OK', statusCode = 200) => sendJson(res, statusCode, {
+      status: 'success',
+      success: true,
+      code: statusCode,
+      message,
+      data: items,
+      ...(meta ? { meta } : {})
+    })
+
+    // For fully custom payloads while keeping consistent HTTP status code handling.
+    res.custom = (payload = {}, statusCode = 200) => sendJson(res, statusCode, payload)
     return res
   }
 }

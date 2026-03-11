@@ -11,7 +11,8 @@ import { Migrator } from '../core/migrator.js'
 import { Seeder } from '../core/seeder.js'
 import { loadConfig } from '../core/config.js'
 import { Router, loadRoutes } from '../core/router.js'
-import { registerDocsRoute } from '../core/swagger.js'
+import { registerDocsRoute, createSpec } from '../core/swagger.js'
+import { loadModules } from '../core/modules.js'
 import { formatCliError } from '../core/errors/Handler.js'
 import { installTestingGlobals } from '../core/testing/index.js'
 import { runTests } from '../core/testing/runner.js'
@@ -103,6 +104,7 @@ function templates(kind, rawName) {
   const tableName = rawName.toLowerCase().endsWith('s') ? rawName.toLowerCase() : `${rawName.toLowerCase()}s`
   const map = {
     controller: { dir: 'app/controllers', file: `${name}.js`, content: `export default class ${name} {\n  async index(req, res) {\n    return res.success([])\n  }\n}\n` },
+    service: { dir: 'app/services', file: `${name}.js`, content: `export default class ${name} {\n  constructor(container = null) {\n    this.container = container\n  }\n}\n` },
     model: { dir: 'app/models', file: `${name}.js`, content: `import Model from '../../core/model'\n\nexport default class ${name} extends Model {\n  static table = '${tableName}'\n}\n` },
     migration: { dir: 'database/migrations', file: `${timestamp()}_${rawName}.js`, content: `export default {\n  async up(schema) {\n    await schema.create('${rawName.replace(/^create_|_table$/g, '')}', (table) => {\n      table.id()\n      table.timestamps()\n    })\n  },\n\n  async down(schema) {\n    await schema.drop('${rawName.replace(/^create_|_table$/g, '')}')\n  }\n}\n` },
     middleware: { dir: 'app/middleware', file: `${name}.js`, content: `export default async function ${name}(req, res, next) {\n  return next()\n}\n` },
@@ -125,17 +127,21 @@ async function make(kind, rawName) {
 
 async function makeModule(rawName) {
   const name = className(rawName)
-  const base = path.resolve(process.cwd(), 'app/modules', name)
-  for (const dir of ['controllers', 'models', 'requests', 'services']) {
+  const slug = name.toLowerCase()
+  const base = path.resolve(process.cwd(), 'modules', slug)
+  for (const dir of ['controllers', 'services', 'models', 'validators', 'policies']) {
     await fsp.mkdir(path.join(base, dir), { recursive: true })
   }
-  await ensureFile(path.join(base, 'module.js'), `export default { name: '${name}' }\n`)
+  await ensureFile(path.join(base, 'module.js'), `export default { name: '${name}', slug: '${slug}' }\n`)
+  await ensureFile(path.join(base, 'routes.js'), `export default async function routes(Route, ctx) {\n  // Example:\n  // Route.group({ prefix: '/api/v1/${slug}' }, (Route) => {\n  //   Route.get('/', async (req, res) => res.success([])).name('${slug}.index')\n  // })\n}\n`)
+  await ensureFile(path.join(base, 'register.js'), `export default async function register({ container }) {\n  // Bind module services here.\n  // Example:\n  // container.singleton('${slug}.service', () => new ${name}Service(container))\n}\n`)
 }
 
 async function routeList() {
   const config = loadConfig()
   const router = new Router({ config })
   router.aliasMiddleware('auth', async (req, res, next) => next())
+  await loadModules(router, { config, container: null, events: null, queue: null, server: null, ws: null })
   await loadRoutes(router, { config, container: null, events: null, queue: null, ws: null })
   registerDocsRoute(router)
   const rows = router.list()
@@ -153,6 +159,7 @@ async function serveSummary() {
 
   const router = new Router({ config })
   router.aliasMiddleware('auth', async (req, res, next) => next())
+  await loadModules(router, { config, container: null, events: null, queue: null, server: null, ws: null })
   await loadRoutes(router, { config, container: null, events: null, queue: null, ws: null })
   registerDocsRoute(router)
   const routesLoaded = router.routes.length
@@ -169,19 +176,39 @@ async function serveSummary() {
     }
   }))).filter(Boolean).length
 
-  const modulesDir = path.resolve(process.cwd(), 'app/modules')
-  const moduleEntries = await fsp.readdir(modulesDir, { withFileTypes: true }).catch(() => [])
-  const modulesLoaded = (await Promise.all(moduleEntries.filter((e) => e.isDirectory()).map(async (entry) => {
-    const moduleFile = path.join(modulesDir, entry.name, 'module.js')
-    try {
-      await fsp.access(moduleFile)
-      return true
-    } catch {
-      return false
-    }
-  }))).filter(Boolean).length
+  const moduleRoots = [path.resolve(process.cwd(), 'modules'), path.resolve(process.cwd(), 'app/modules')]
+  const moduleCounts = await Promise.all(moduleRoots.map(async (modulesDir) => {
+    const moduleEntries = await fsp.readdir(modulesDir, { withFileTypes: true }).catch(() => [])
+    const count = (await Promise.all(moduleEntries.filter((e) => e.isDirectory()).map(async (entry) => {
+      const moduleFile = path.join(modulesDir, entry.name, 'module.js')
+      try {
+        await fsp.access(moduleFile)
+        return true
+      } catch {
+        return false
+      }
+    }))).filter(Boolean).length
+    return count
+  }))
+  const modulesLoaded = moduleCounts.reduce((a, b) => a + b, 0)
 
   return { config, url, env, routesLoaded, pluginsLoaded, modulesLoaded }
+}
+
+async function docsGenerate() {
+  const config = loadConfig()
+  const router = new Router({ config })
+  router.aliasMiddleware('auth', async (req, res, next) => next())
+  await loadModules(router, { config, container: null, events: null, queue: null, server: null, ws: null })
+  await loadRoutes(router, { config, container: null, events: null, queue: null, ws: null })
+  registerDocsRoute(router)
+  const spec = createSpec(router)
+
+  const outDir = path.resolve(process.cwd(), 'storage/docs')
+  await fsp.mkdir(outDir, { recursive: true })
+  const outFile = path.join(outDir, 'openapi.json')
+  await fsp.writeFile(outFile, JSON.stringify(spec, null, 2), 'utf8')
+  console.log(`Generated: ${path.relative(process.cwd(), outFile)}`)
 }
 
 async function withApp(callback) {
@@ -504,6 +531,7 @@ async function migrateStatus(app) {
 async function main() {
   switch (command) {
     case 'make:controller': return make('controller', name)
+    case 'make:service': return make('service', name)
     case 'make:model': return make('model', name)
     case 'make:migration': return make('migration', name)
     case 'make:middleware': return make('middleware', name)
@@ -519,6 +547,7 @@ async function main() {
     case 'storage:link': return storageLink()
     case 'serve': return startServe()
     case 'route:list': return routeList()
+    case 'docs:generate': return docsGenerate()
     case 'test':
       installTestingGlobals()
       return runTests()
@@ -533,15 +562,14 @@ async function main() {
       case 'migrate:rollback': return migrator.rollback()
       case 'migrate:reset': return migrator.reset()
       case 'migrate:fresh':
-        await migrator.reset()
-        return migrator.migrate()
+        return migrator.fresh()
       case 'migrate:status': return migrateStatus(app)
       case 'db:seed': return seeder.run(name || null)
       case 'queue:work': return app.queue.work()
       case 'queue:restart': return queueRestart()
       case 'schedule:run': return app.container.make('scheduler').runAll()
       default:
-        console.log(`Backurus CLI\n\nCommands:\n- make:controller\n- make:model\n- make:migration\n- make:middleware\n- make:request\n- make:job\n- make:event\n- make:seeder\n- make:policy\n- make:resource\n- make:module\n- migrate\n- migrate:rollback\n- migrate:reset\n- migrate:fresh\n- migrate:status\n- db:seed\n- route:list\n- queue:work\n- queue:restart\n- schedule:run\n- serve\n- test\n- storage:link\n- config:cache\n- config:clear`)
+        console.log(`Backurus CLI\n\nCommands:\n- make:controller\n- make:service\n- make:model\n- make:migration\n- make:middleware\n- make:request\n- make:job\n- make:event\n- make:seeder\n- make:policy\n- make:resource\n- make:module\n- migrate\n- migrate:rollback\n- migrate:reset\n- migrate:fresh\n- migrate:status\n- db:seed\n- route:list\n- docs:generate\n- queue:work\n- queue:restart\n- schedule:run\n- serve\n- test\n- storage:link\n- config:cache\n- config:clear`)
     }
   })
 }

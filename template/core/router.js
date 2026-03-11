@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { validate } from './validator.js'
+import { limit } from './helpers/limit.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const routesDir = path.resolve(__dirname, '../routes')
@@ -17,10 +18,58 @@ function compilePath(routePath) {
 
 async function resolveControllerAction(action, context) {
   const [controllerName, method] = action.split('@')
-  const controllerPath = path.resolve(process.cwd(), 'app/controllers', `${controllerName}.js`)
-  const mod = await import(pathToFileURL(controllerPath).href)
+
+  const resolveCandidates = (name) => {
+    const cwd = process.cwd()
+    const normalized = String(name || '')
+
+    const moduleSplit = normalized.includes('::') ? normalized.split('::') : null
+    const pathSplit = normalized.includes('/') ? normalized.split('/') : null
+
+    if (moduleSplit) {
+      const [moduleName, controllerFile] = moduleSplit
+      const moduleLower = String(moduleName || '').toLowerCase()
+      return [
+        path.resolve(cwd, 'modules', moduleLower, 'controllers', `${controllerFile}.js`),
+        path.resolve(cwd, 'modules', moduleName, 'controllers', `${controllerFile}.js`),
+        path.resolve(cwd, 'app/modules', moduleName, 'controllers', `${controllerFile}.js`)
+      ]
+    }
+
+    if (pathSplit) {
+      const [moduleName, ...rest] = pathSplit
+      const controllerFile = rest.join('/')
+      const moduleLower = String(moduleName || '').toLowerCase()
+      return [
+        path.resolve(cwd, 'modules', moduleLower, 'controllers', `${controllerFile}.js`),
+        path.resolve(cwd, 'modules', moduleName, 'controllers', `${controllerFile}.js`),
+        path.resolve(cwd, 'app/modules', moduleName, 'controllers', `${controllerFile}.js`)
+      ]
+    }
+
+    return [
+      path.resolve(cwd, 'app/controllers', `${normalized}.js`)
+    ]
+  }
+
+  const candidates = resolveCandidates(controllerName)
+  let mod = null
+  let lastError = null
+  for (const candidate of candidates) {
+    try {
+      mod = await import(pathToFileURL(candidate).href)
+      break
+    } catch (error) {
+      lastError = error
+    }
+  }
+  if (!mod) throw lastError || new Error(`Controller [${controllerName}] not found.`)
+
   const Controller = mod.default
-  const instance = new Controller(context)
+  const deps = Array.isArray(Controller?.inject) ? Controller.inject : null
+  const instance = deps && context?.container
+    ? new Controller(...deps.map((key) => context.container.make(key)))
+    : new Controller(context)
   if (typeof instance[method] === 'function') {
     return instance[method].bind(instance)
   }
@@ -45,6 +94,12 @@ class RouteDefinition {
     return this
   }
 
+  throttle(max, windowSeconds, name = null) {
+    const key = name || `${this.route.method}:${this.route.routePath}`
+    this.route.handlers.unshift(limit(key, max, windowSeconds))
+    return this
+  }
+
   middleware(names) {
     const list = Array.isArray(names) ? names : [names]
     this.route.middlewareNames.push(...list)
@@ -64,6 +119,7 @@ export class Router {
     this.middlewares = []
     this.docs = []
     this.middlewareAliases = new Map()
+    this.groupStack = []
   }
 
   aliasMiddleware(name, handler) {
@@ -71,19 +127,24 @@ export class Router {
   }
 
   register(method, routePath, action, ...handlers) {
-    const { regex, keys } = compilePath(routePath)
+    const groupPrefix = this.groupStack.map((g) => g.prefix).join('')
+    const fullPath = `${groupPrefix}${routePath}`
+    const { regex, keys } = compilePath(fullPath)
+
+    const groupMiddlewareNames = this.groupStack.flatMap((g) => g.middlewareNames)
+    const groupHandlers = this.groupStack.flatMap((g) => g.handlers)
     const route = {
       method,
-      routePath,
+      routePath: fullPath,
       action,
       regex,
       keys,
-      handlers: handlers.flat().filter(Boolean),
-      middlewareNames: [],
+      handlers: [...groupHandlers, ...handlers.flat().filter(Boolean)],
+      middlewareNames: [...groupMiddlewareNames],
       name: null
     }
     this.routes.push(route)
-    this.docs.push({ method, path: routePath, action: typeof action === 'string' ? action : 'Closure' })
+    this.docs.push({ method, path: fullPath, action: typeof action === 'string' ? action : 'Closure' })
     return new RouteDefinition(this, route)
   }
 
@@ -93,6 +154,21 @@ export class Router {
   patch(pathname, action, ...handlers) { return this.register('PATCH', pathname, action, ...handlers) }
   delete(pathname, action, ...handlers) { return this.register('DELETE', pathname, action, ...handlers) }
   use(...handlers) { this.middlewares.push(...handlers.flat()) }
+
+  group(options, callback) {
+    const opts = options || {}
+    const prefix = String(opts.prefix || '')
+    const middleware = Array.isArray(opts.middleware) ? opts.middleware : (opts.middleware ? [opts.middleware] : [])
+    const middlewareNames = middleware.filter((m) => typeof m === 'string')
+    const handlers = middleware.filter((m) => typeof m === 'function')
+
+    this.groupStack.push({ prefix, middlewareNames, handlers })
+    try {
+      return callback(this)
+    } finally {
+      this.groupStack.pop()
+    }
+  }
 
   async resolveRouteHandlers(route) {
     const routeLevel = []

@@ -1,0 +1,186 @@
+[2026-03-11 11:40:00]
+Error: Missing initializer in const declaration
+Type: server
+Code: 500
+Request: GET /products
+Stack: SyntaxError: Missing initializer in const declaration
+    at compileSourceTextModule (node:internal/modules/esm/utils:318:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:99:18)
+    at #translate (node:internal/modules/esm/loader:473:20)
+    at afterLoad (node:internal/modules/esm/loader:529:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:534:12)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:577:36)
+    at afterResolve (node:internal/modules/esm/loader:625:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:631:12)
+    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:32)
+    at TracingChannel.tracePromise (node:diagnostics_channel:350:14)[2026-03-11 11:41:09]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:42]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:43]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:43]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:44]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:44]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:44]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:51]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:51]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)[2026-03-11 11:42:51]
+Error: Product.dimana is not a function
+Type: server
+Code: 500
+Request: GET /products
+File:     at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js
+Line: 16
+Stack: TypeError: Product.dimana is not a function
+    at ProductController.index (file:///home/rakarawr/Documents/project/2026/testai/app/controllers/ProductController.js:16:32)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at file:///home/rakarawr/Documents/project/2026/testai/plugins/logger-plugin/index.js:7:12
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:31
+    at rateLimiter (file:///home/rakarawr/Documents/project/2026/testai/core/rate-limiter.js:21:12)
+    at runner (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:18:12)
+    at runStack (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:20:10)
+    at Server.handle (file:///home/rakarawr/Documents/project/2026/testai/core/server.js:166:13)

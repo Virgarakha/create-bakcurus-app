@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { SeederError } from './errors/HttpError.js'
 
 export class Seeder {
   constructor(container, config) {
@@ -12,10 +13,14 @@ export class Seeder {
     const files = (await fs.readdir(this.seedersDir).catch(() => [])).filter((file) => file.endsWith('.js')).sort()
     for (const file of files) {
       if (name && file !== `${name}.js`) continue
-      const mod = await import(pathToFileURL(path.join(this.seedersDir, file)).href)
-      if (typeof mod.default?.run === 'function') {
-        await mod.default.run(this.container)
-        console.log(`Seeded: ${file}`)
+      try {
+        const mod = await import(pathToFileURL(path.join(this.seedersDir, file)).href)
+        if (typeof mod.default?.run === 'function') {
+          await mod.default.run(this.container)
+          console.log(`Seeded: ${file}`)
+        }
+      } catch (error) {
+        throw new SeederError('Seeding failed', { file: path.join(this.seedersDir, file), cause: error })
       }
     }
   }

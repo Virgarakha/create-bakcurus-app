@@ -19,4 +19,10 @@ export class WebSocketHub {
       if (client.readyState === 1) client.send(payload)
     }
   }
+
+  async close() {
+    if (!this.wss) return
+    await new Promise((resolve) => this.wss.close(() => resolve()))
+    this.wss = null
+  }
 }

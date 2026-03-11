@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
+import { pathToFileURL } from 'node:url'
 import dotenv from 'dotenv'
 import chokidar from 'chokidar'
 import { createApp } from '../bootstrap/app.js'
@@ -11,11 +12,72 @@ import { Seeder } from '../core/seeder.js'
 import { loadConfig } from '../core/config.js'
 import { Router, loadRoutes } from '../core/router.js'
 import { registerDocsRoute } from '../core/swagger.js'
+import { formatCliError } from '../core/errors/Handler.js'
 
 dotenv.config()
 
 const [, , command, name] = process.argv
 const cacheFile = path.resolve(process.cwd(), 'storage/framework/cache/config.json')
+const registerFile = pathToFileURL(path.resolve(process.cwd(), 'backurus-register.mjs')).href
+
+const ANSI = {
+  reset: '\u001b[0m',
+  red: '\u001b[31m',
+  yellow: '\u001b[33m',
+  green: '\u001b[32m',
+  blue: '\u001b[34m',
+  gray: '\u001b[90m',
+  bold: '\u001b[1m'
+}
+
+function paint(color, text) {
+  return `${color}${text}${ANSI.reset}`
+}
+
+const icons = {
+  dino: '🦖',
+  rocket: '🚀',
+  box: '📦',
+  folder: '📂',
+  db: '🗄',
+  routes: '📡',
+  plugin: '🧩',
+  module: '📦',
+  watch: '👀',
+  restart: '🔄',
+  ok: '✅',
+  warn: '⚠️',
+  err: '❌',
+  globe: '🌍',
+  book: '📚',
+  bolt: '⚡'
+}
+
+function banner() {
+  console.log(paint(ANSI.bold, `${icons.dino} Backurus Development Server`))
+  console.log(paint(ANSI.gray, 'Backurus — Modern Backend Framework for Node.js'))
+  console.log('')
+}
+
+function logInfo(message) {
+  console.log(paint(ANSI.blue, message))
+}
+
+function logDim(message) {
+  console.log(paint(ANSI.gray, message))
+}
+
+function logSuccess(message) {
+  console.log(paint(ANSI.green, message))
+}
+
+function logWarn(message) {
+  console.log(paint(ANSI.yellow, message))
+}
+
+function logError(message) {
+  console.log(paint(ANSI.red, message))
+}
 
 function timestamp() {
   const now = new Date()
@@ -82,6 +144,44 @@ async function routeList() {
   }
 }
 
+async function serveSummary() {
+  const config = loadConfig()
+  const url = config?.app?.url || `http://127.0.0.1:${config?.app?.port || 3000}`
+  const env = config?.app?.env || 'development'
+
+  const router = new Router({ config })
+  router.aliasMiddleware('auth', async (req, res, next) => next())
+  await loadRoutes(router, { config, container: null, events: null, queue: null, ws: null })
+  registerDocsRoute(router)
+  const routesLoaded = router.routes.length
+
+  const pluginsDir = path.resolve(process.cwd(), 'plugins')
+  const pluginEntries = await fsp.readdir(pluginsDir, { withFileTypes: true }).catch(() => [])
+  const pluginsLoaded = (await Promise.all(pluginEntries.filter((e) => e.isDirectory()).map(async (entry) => {
+    const pluginFile = path.join(pluginsDir, entry.name, 'index.js')
+    try {
+      await fsp.access(pluginFile)
+      return true
+    } catch {
+      return false
+    }
+  }))).filter(Boolean).length
+
+  const modulesDir = path.resolve(process.cwd(), 'app/modules')
+  const moduleEntries = await fsp.readdir(modulesDir, { withFileTypes: true }).catch(() => [])
+  const modulesLoaded = (await Promise.all(moduleEntries.filter((e) => e.isDirectory()).map(async (entry) => {
+    const moduleFile = path.join(modulesDir, entry.name, 'module.js')
+    try {
+      await fsp.access(moduleFile)
+      return true
+    } catch {
+      return false
+    }
+  }))).filter(Boolean).length
+
+  return { config, url, env, routesLoaded, pluginsLoaded, modulesLoaded }
+}
+
 async function withApp(callback) {
   const app = await createApp()
   try {
@@ -91,14 +191,47 @@ async function withApp(callback) {
   }
 }
 
-function startServe() {
+async function startServe() {
   let child = null
   let watcher = null
   let shuttingDown = false
+  let serverReady = false
+  let lastStderr = ''
+  let restartTimer = null
+  let restarting = false
+  let pendingRestart = null
+  let intentionallyStopping = false
+  let readyResolve = null
+  let exitResolve = null
 
-  const stopChild = (signal = 'SIGTERM') => {
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+  async function stopChildGracefully(signal = 'SIGTERM') {
     if (!child || child.killed) return
-    child.kill(signal)
+    intentionallyStopping = true
+
+    const childRef = child
+    const exitPromise = new Promise((resolve) => {
+      childRef.once('exit', () => resolve())
+    })
+
+    try {
+      childRef.kill(signal)
+    } catch {
+      // Ignore kill errors if process already exited.
+    }
+
+    // Escalate if it doesn't exit in time.
+    const timeout = setTimeout(() => {
+      try {
+        if (!childRef.killed) childRef.kill('SIGKILL')
+      } catch {
+        // Ignore.
+      }
+    }, 2500)
+
+    await exitPromise.finally(() => clearTimeout(timeout))
+    intentionallyStopping = false
   }
 
   const cleanup = async (signal = null) => {
@@ -109,30 +242,191 @@ function startServe() {
       await watcher.close().catch(() => {})
     }
 
-    stopChild(signal === 'SIGKILL' ? 'SIGKILL' : 'SIGTERM')
+    await stopChildGracefully(signal === 'SIGKILL' ? 'SIGKILL' : 'SIGTERM')
 
     if (signal) {
       process.exit(0)
     }
   }
 
-  const spawnServer = () => {
-    stopChild('SIGTERM')
-    child = spawn(process.execPath, ['index.js'], {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-      env: process.env
-    })
-    child.on('exit', () => {
-      child = null
+  banner()
+  logInfo(`${icons.rocket} Starting server...`)
+  console.log('')
+
+  let summary = null
+  try {
+    logDim(`${icons.box} Loading configuration...`)
+    summary = await serveSummary()
+    logDim(`${icons.folder} Loading routes...`)
+    logDim(`${icons.db} Connecting database...`)
+  } catch (error) {
+    logWarn(`${icons.warn} Preflight checks failed (continuing anyway).`)
+    logDim(formatCliError(error, { context: 'Serve preflight' }))
+  }
+
+  if (summary) {
+    logDim(`${icons.routes} Routes loaded: ${summary.routesLoaded}`)
+    logDim(`${icons.plugin} Plugins loaded: ${summary.pluginsLoaded}`)
+    logDim(`${icons.module} Modules loaded: ${summary.modulesLoaded}`)
+    console.log('')
+  }
+
+  const printReady = () => {
+    if (serverReady) return
+    serverReady = true
+    if (typeof readyResolve === 'function') {
+      readyResolve()
+      readyResolve = null
+    }
+    logSuccess(`${icons.ok} Server running!`)
+    console.log('')
+    if (summary?.url) logInfo(`URL: ${summary.url}`)
+    if (summary?.url) logInfo(`Docs: ${summary.url.replace(/\/$/, '')}/docs`)
+    if (summary?.env) logInfo(`${icons.bolt} Environment: ${summary.env}`)
+    console.log('')
+    logDim(`${icons.watch} Watching files for changes...`)
+    console.log('')
+    logDim('Press CTRL+C to stop the server.')
+  }
+
+  const printServeError = (rawText) => {
+    const text = String(rawText || '')
+    logError(`${icons.err} Server Error`)
+    console.log('')
+    if (text.trim()) {
+      const messageLine = text.split('\n').find((line) => line.trim()) || ''
+      logError(`Message: ${messageLine.trim()}`)
+    }
+    const suggestion = (() => {
+      if (text.includes('EADDRINUSE')) return 'Try using another port in your .env file (APP_PORT), or stop the process using that port.'
+      if (text.includes('EACCES')) return 'Try using a port above 1024, or adjust permissions.'
+      if (text.includes('ECONNREFUSED') || text.includes('connect ECONNREFUSED')) return 'Check your database/redis service is running and credentials in .env are correct.'
+      return null
+    })()
+    if (suggestion) {
+      console.log('')
+      logWarn('Suggestion:')
+      console.log(suggestion)
+    }
+  }
+
+  const pipeLines = (stream, onLine) => {
+    let buffer = ''
+    stream.on('data', (chunk) => {
+      buffer += chunk.toString('utf8')
+      let index = buffer.indexOf('\n')
+      while (index !== -1) {
+        const line = buffer.slice(0, index)
+        buffer = buffer.slice(index + 1)
+        onLine(line.replace(/\r$/, ''))
+        index = buffer.indexOf('\n')
+      }
     })
   }
 
-  spawnServer()
+  const spawnServer = () => {
+    serverReady = false
+    lastStderr = ''
+    readyResolve = null
+    exitResolve = null
+
+    const readyPromise = new Promise((resolve) => { readyResolve = resolve })
+    const exitPromise = new Promise((resolve) => { exitResolve = resolve })
+
+    child = spawn(process.execPath, ['--import', registerFile, 'index.js'], {
+      stdio: ['inherit', 'pipe', 'pipe'],
+      cwd: process.cwd(),
+      env: process.env
+    })
+
+    pipeLines(child.stdout, (line) => {
+      if (!line.trim()) return
+      if (line.includes('listening on port')) {
+        printReady()
+        return
+      }
+      console.log(paint(ANSI.gray, `› ${line}`))
+    })
+
+    pipeLines(child.stderr, (line) => {
+      if (!line.trim()) return
+      lastStderr = `${lastStderr}\n${line}`.trim()
+      console.log(paint(ANSI.red, `✖ ${line}`))
+    })
+
+    child.on('exit', (code, signal) => {
+      if (typeof exitResolve === 'function') {
+        exitResolve({ code, signal })
+        exitResolve = null
+      }
+
+      if (!shuttingDown && !intentionallyStopping && !serverReady) {
+        console.log('')
+        printServeError(lastStderr)
+      }
+      child = null
+    })
+
+    return { readyPromise, exitPromise }
+  }
+
+  const spawnServerWithWait = async (maxRetries = 3) => {
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      const { readyPromise, exitPromise } = spawnServer()
+      const result = await Promise.race([
+        readyPromise.then(() => ({ type: 'ready' })),
+        exitPromise.then((exit) => ({ type: 'exit', exit }))
+      ])
+
+      if (result.type === 'ready') return true
+
+      const stderr = String(lastStderr || '')
+      if (stderr.includes('EADDRINUSE') && attempt < maxRetries && !shuttingDown) {
+        console.log('')
+        logWarn(`${icons.warn} Port is still in use. Retrying restart...`)
+        await wait(250 * (attempt + 1))
+        continue
+      }
+
+      return false
+    }
+    return false
+  }
+
+  const restartServer = async (changedFile = null) => {
+    if (restarting) {
+      pendingRestart = changedFile || pendingRestart
+      return
+    }
+    restarting = true
+
+    console.log('')
+    logInfo(`${icons.restart} Changes detected${changedFile ? ` (${changedFile})` : ''}`)
+    logDim('🛑 Stopping server...')
+    await stopChildGracefully('SIGTERM')
+    await wait(200)
+    logDim('♻ Restarting server...')
+    await spawnServerWithWait()
+
+    restarting = false
+    if (pendingRestart) {
+      const next = pendingRestart
+      pendingRestart = null
+      await restartServer(next)
+    }
+  }
+
+  await spawnServerWithWait()
   watcher = chokidar.watch(['app', 'bootstrap', 'config', 'core', 'database', 'routes', 'plugins', 'index.js'], {
     ignoreInitial: true
   })
-  watcher.on('all', () => spawnServer())
+  watcher.on('all', (_event, filePath) => {
+    if (restartTimer) clearTimeout(restartTimer)
+    restartTimer = setTimeout(() => {
+      const relative = filePath ? path.relative(process.cwd(), filePath) : null
+      restartServer(relative)
+    }, 120)
+  })
 
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
     process.on(signal, () => {
@@ -140,13 +434,15 @@ function startServe() {
     })
   }
 
-  process.on('exit', () => stopChild('SIGTERM'))
+  process.on('exit', () => {
+    stopChildGracefully('SIGTERM').catch(() => {})
+  })
   process.on('uncaughtException', async (error) => {
-    console.error(error.stack || error.message)
+    console.error(formatCliError(error, { context: `Command: serve` }))
     await cleanup('SIGTERM')
   })
   process.on('unhandledRejection', async (error) => {
-    console.error(error?.stack || error?.message || error)
+    console.error(formatCliError(error, { context: `Command: serve` }))
     await cleanup('SIGTERM')
   })
 }
@@ -246,6 +542,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error.stack || error.message)
+  console.error(formatCliError(error, { context: command ? `Command: ${command}` : null }))
   process.exit(1)
 })

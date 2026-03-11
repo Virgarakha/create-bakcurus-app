@@ -1,3 +1,5 @@
+import { ValidationError } from './errors/HttpError.js'
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function applyRule(field, value, rule) {
@@ -27,10 +29,7 @@ export async function validate(req, RequestClass) {
   }
 
   if (Object.keys(errors).length) {
-    const err = new Error('Validation failed')
-    err.statusCode = 422
-    err.errors = errors
-    throw err
+    throw new ValidationError(errors)
   }
 
   return req.body

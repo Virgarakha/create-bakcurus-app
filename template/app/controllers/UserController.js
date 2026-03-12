@@ -1,6 +1,6 @@
 import User from '../models/User'
 import StoreUserRequest from '../requests/StoreUserRequest'
-import { validate } from '../../core/validator'
+import { validate } from 'backurus/core/validator'
 
 export default class UserController {
   static async index(req, res) {
@@ -37,8 +37,8 @@ export default class UserController {
   }
 
   static async profile(req, res) {
-    const user = await User.find(req.user.id)
-    if (!user) return res.notFound('User not found')
-    return res.success(user)
+    // Route ini sebaiknya pakai middleware("auth") supaya `req.user` sudah terisi.
+    if (Auth.guest()) return res.error('Unauthorized', 401)
+    return res.success(Auth.user())
   }
 }

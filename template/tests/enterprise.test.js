@@ -1,4 +1,4 @@
-import { Router } from '../core/router.js'
+import { Router } from 'backurus/core/router'
 
 test('router group applies prefix', async () => {
   const router = new Router()
@@ -13,4 +13,3 @@ test('route throttle injects middleware handler', async () => {
   router.post('/login', async () => {}).throttle(10, 60)
   expect(typeof router.routes[0].handlers[0]).toBe('function')
 })
-

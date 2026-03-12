@@ -1,4 +1,4 @@
-import { ResponseFactory } from '../core/response.js'
+import { ResponseFactory } from 'backurus/core/response'
 
 function createMockRes() {
   const res = {
@@ -34,4 +34,3 @@ test('res.custom returns payload as-is', async () => {
   expect(res.statusCode).toBe(202)
   expect(json.hello).toBe('world')
 })
-

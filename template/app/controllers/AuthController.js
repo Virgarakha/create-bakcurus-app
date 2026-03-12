@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs'
 import User from '../models/User'
-import { signToken } from '../../core/auth'
+import { signToken } from 'backurus/core/auth'
 import UserRegistered from '../events/UserRegistered'
+import { Auth } from 'backurus'
 
 export default class AuthController {
   static async register(req, res) {
@@ -30,5 +31,11 @@ export default class AuthController {
 
     const token = signToken({ id: user.id, email: user.email, role: user.role }, req.container.make('config'))
     return res.success({ user, token }, 'Login successful')
+  }
+
+  static async logout(req, res) {
+    const ok = await Auth.token().delete()
+    if (!ok) return res.unauthorized('Missing bearer token')
+    return res.success(null, 'Logout successful')
   }
 }

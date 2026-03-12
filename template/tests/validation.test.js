@@ -1,4 +1,4 @@
-import { sanitize, validate } from '../core/validator.js'
+import { sanitize, validate } from 'backurus/core/validator'
 
 test('nested object validation', async () => {
   const data = { user: { name: 'Rakha', email: 'rakha@email.com' } }
@@ -64,4 +64,3 @@ test('file validation: image dimensions + mimes + max', async () => {
   const out = await validate({}, rules, null, { files })
   expect(out).toBeTruthy()
 })
-

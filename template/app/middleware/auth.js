@@ -1,4 +1,4 @@
-import { authMiddleware } from '../../core/auth'
+import { authMiddleware } from 'backurus/core/auth'
 
 export default function makeAuth(container) {
   return authMiddleware(container)

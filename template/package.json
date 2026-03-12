@@ -1,29 +1,25 @@
 {
-  "name": "backurus",
+  "name": "my-backurus-app",
   "version": "1.0.0",
-  "description": "Backurus is a Laravel-inspired Node.js backend framework built with modern ES Modules.",
+  "description": "A Backurus application",
   "type": "module",
   "main": "index.js",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "node urus serve",
     "start": "node index.js",
     "urus": "node urus",
-    "artisan": "node cli/artisan.js",
+    "artisan": "node artisan.js",
     "migrate": "node urus migrate",
     "seed": "node urus db:seed",
     "queue:work": "node urus queue:work",
     "serve": "node urus serve"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "better-sqlite3": "^11.10.0",
-    "chokidar": "^4.0.3",
-    "dotenv": "^16.4.7",
-    "ioredis": "^5.7.0",
-    "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.19.1",
-    "swagger-ui-express": "^5.0.1",
-    "ws": "^8.18.1"
+    "backurus": "workspace:*",
+    "bcryptjs": "^3.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

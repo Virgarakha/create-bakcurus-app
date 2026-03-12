@@ -12,16 +12,4 @@ export default async function routes(Route) {
   Route.put('/users/:id', 'UserController@update').name('users.update')
   Route.delete('/users/:id', 'UserController@destroy', roleGuard('admin')).middleware('auth').name('users.destroy')
   Route.get('/profile', 'UserController@profile').middleware('auth').name('users.profile')
-
-  Route.get('/products', 'ProductController@index').name('products.index')
-  Route.post('/products', 'ProductController@store').name('products.store')
-  Route.get('/products/:id', 'ProductController@show').name('products.show')
-  Route.put('/products/:id', 'ProductController@update').name('products.update')
-  Route.delete('/products/:id', 'ProductController@destroy').name('products.destroy')
-
-  Route.get('/siswas', 'SiswaController@index').name('siswas.index')
-  Route.post('/siswas', 'SiswaController@store').name('siswas.store')
-  Route.get('/siswas/:id', 'SiswaController@show').name('siswas.show')
-  Route.put('/siswas/:id', 'SiswaController@update').name('siswas.update')
-  Route.delete('/siswas/:id', 'SiswaController@destroy').name('siswas.destroy')
 }

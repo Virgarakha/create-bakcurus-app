@@ -1,6 +1,6 @@
 {
   "name": "create-backurus-app",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "bin": {
     "create-backurus-app": "./bin/index.js"
   },
